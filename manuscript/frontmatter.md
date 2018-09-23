@@ -23,15 +23,15 @@ who is both sceptical and curious about the **Functional Programming** (FP)
 paradigm. This book justifies every concept with practical examples, including
 writing a web application.
 -->
-# この本について
-この本は、Javaの開発経験があり、**関数型プログラミング**（FP）に懐疑心と好奇心の両方を持っているような、
-典型的なScala開発者に向けて書かれています。この本では、Webアプリケーションの作成を含む典型的な例を用いてあらゆる概念の妥当性を示します。
+# 本書について
+本書は、Javaの開発経験があり、**関数型プログラミング**（FP）に懐疑心と好奇心の両方を持っているような、
+典型的なScala開発者に向けて書かれています。本書では、Webアプリケーションの作成を含む典型的な例を用いてあらゆる概念の妥当性を示します。
 
 <!--
 This book uses [Scalaz 7.2](https://github.com/scalaz/scalaz), the most popular, stable, principled and
 comprehensive Functional Programming framework for Scala.
 -->
-この本では、Scalaにおいて最も有名かつ安定して、包括的な関数型プログラミングの原則に基づいたフレームワークである[Scalaz 7.2](https://github.com/scalaz/scalaz)を使用します。
+本書では、Scalaにおいて最も有名かつ安定して、包括的な関数型プログラミングの原則に基づいたフレームワークである[Scalaz 7.2](https://github.com/scalaz/scalaz)を使用します。
 
 <!--
 This book is designed to be read from cover to cover, in the order presented,
@@ -41,7 +41,7 @@ children, and progress to Riemann / Einstein / Maxwell if we become students of
 physics.
 -->
 
-この本は先頭から最後まで順番に読んでいくものとして構成しています。例えば、初めの方の章では後の章で疑問を投げかけるような
+本書は先頭から最後まで順番に読んでいくものとして構成しています。例えば、初めの方の章では後の章で疑問を投げかけるような
 コーディングスタイルを奨めています。子供のときにはニュートンの重力理論を学び、物理学生になってからリーマンやアインシュタイン、
 マクスウェルの理論を学ぶのと同じです。
 
@@ -54,8 +54,8 @@ descriptions presented in this book.
 -->
 
 本を読んでいくのにコンピュータは必要ではありませんが、Scalazのソースコードを勉強することをお勧めします。
-いくつか複雑なコードスニペットが[この本のコード例](https://github.com/fommil/fpmortals/)として出てきますが、
-もっと実践的な演習を望む人はScalaz(および、サンプルのアプリケーション)をこの本に記載されている部分的な説明を
+いくつか複雑なコードスニペットが[本書のコード例](https://github.com/fommil/fpmortals/)として出てきますが、
+もっと実践的な演習を望む人はScalaz(および、サンプルのアプリケーション)を本書に記載されている部分的な説明を
 用いて実装することをお勧めします。
 
 <!--
@@ -64,13 +64,15 @@ library in Scala from first principles.
 -->
 
 [Scala関数型デザイン&プログラミング](https://www.amazon.co.jp/dp/4844337769/)を読むこともお勧めします。
-この本では、Scalaの第一原理による関数型プログラミングの作り方を学ぶことができます。
+本書では、Scalaの第一原理による関数型プログラミングの作り方を学ぶことができます。
 
-<--
+<!--
 # Copyleft Notice
 -->
 
-<--
+# コピーレフトについて
+
+<!--
 This book is **Libre** and follows the philosophy of [Free Software](https://www.gnu.org/philosophy/free-sw.en.html): you can use
 this book as you like, the [source is available](https://github.com/fommil/fpmortals/) you can redistribute this book
 and you can distribute your own version. That means you can print it, photocopy
@@ -78,15 +80,24 @@ it, e-mail it, upload it to websites, change it, translate it, charge for it,
 remix it, delete bits, and draw all over it.
 -->
 
+本書は**自由**であり[フリーソフトウェア](https://www.gnu.org/philosophy/free-sw.en.html)の哲学に則ります。
+誰でも好きなように本書を使うことができますし、[本書のソースコード](https://github.com/fommil/fpmortals/)を使って再配布や
+自らのバージョンの出版を行っても構いません。つまり、印刷やコピー、Eメールの送信やWEBサイトへのアップロード、翻訳、それらに対する変更、
+改変、図を削除したり付け加えたりすることもできます。
+
 <!--
 This book is **Copyleft**: if you change the book and distribute your own version,
 you must also pass these freedoms to its recipients.
 -->
 
+この本は**コピーレフト**です。本に対する変更を行って自らのバージョンの配布を行う場合は、配布するバージョンにもこれらの自由を与えなければいけません。
+
 <!--
 This book uses the [Creative Commons Attribution ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode) (CC
 BY-SA 4.0) license.
 -->
+
+この本は[CC-BY-SA 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode)ライセンスを用います。
 
 <!--
 All original code snippets in this book are separately [CC0](https://wiki.creativecommons.org/wiki/CC0) licensed, you may use
@@ -94,14 +105,21 @@ them without restriction. Excerpts from Scalaz and related libraries maintain
 their license, reproduced in full in the appendix.
 -->
 
+この本に収められているソースコードについては、制限なくそれらを利用できるように別途[CC0](https://wiki.creativecommons.org/wiki/CC0)ライセンスを用います。 Scalazや関連ライブラリからの引用については付録に記載しています。
+
 <!--
 The example application `drone-dynamic-agents` is distributed under the terms of
 the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html): only the snippets in this book are available without restriction.
 -->
 
+`dron-dynamic-agents`というサンプルアプリケーションは[GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)での配布なので、
+制限なしに利用できるのはこの本のスニペットのみです。
+
 <!--
 # Thanks
 -->
+
+# 謝辞
 
 <!--
 Diego Esteban Alonso Blas, Raúl Raja Martínez and Peter Neyens of 47
@@ -110,10 +128,15 @@ for their help explaining the principles of FP. Kenji Yoshida and
 Jason Zaugg for being the main authors of Scalaz, and Paul Chuisano /
 Miles Sabin for fixing a critical bug in the Scala compiler ([SI-2712](https://issues.scala-lang.org/browse/SI-2712)).
 -->
+47 degreesのディエゴ・エステバン・アロンソ・ブラス、ラウール・ラジャ・マルティネス、ピーター・ネイエンズ、および、ルナール・ビャナソン、トニー・モリス、ジョン・ド・ゴーズ、エドワード・クメット各氏らは関数型プログラミングの原則の説明において手助けをしてくれました。
+吉田憲治氏とジェイソン・ザーグ氏はScalazの主要な著者です。
+ポール・チュイザーノとマイルス・セイビンはScalaコンパイルの致命的なバグを修正してくれました。（[SI-2712]（https://issues.scala-lang.org/browse/SI -2712））
 
 <!--
 Thanks to the readers who gave feedback on early drafts of this text.
 -->
+
+草稿段階においてフィードバックをしてくれた読者に感謝します。
 
 <!--
 Some material was particularly helpful for my own understanding of the concepts
@@ -125,6 +148,9 @@ Luka Jacobowitz for [Optimizing Tagless Final](https://lukajcb.github.io/blog/fu
 State](https://www.youtube.com/watch?v=JPVagd9W4Lo), Gabriel Gonzalez for [The Continuation Monad](http://www.haskellforall.com/2012/12/the-continuation-monad.html), and Yi Lin Wei / Zainab Ali
 for their tutorials at Hack The Tower meetups.
 -->
+
+いくつかの資料は私がこの本を書くための概念を理解するのに特に役立ちました。
+フアン・マヌエル・セラーノ氏の[All Roads Lead to Lambda](https://skillsmatter.com/skillscasts/9904-london-scala-march-meetup#video)、ペレ・ヴィッレガ氏の[Free Monads](http：//perevillega.com/understanding-free-monads)、ディック・ウォール氏とジョシュ・スエース氏の[For：What is it For For？](https://www.youtube.com/watch?v=WDaw2yXAa50)、エリック・バッカー氏の[Options in Futures, how to unsuck them](https://www.youtube.com/watch?v=hGMndafDcc8)、ノエル・マーカム氏の[ADTs for the Win!](https://www.47deg.com/presentations/2017/06/01/ADT-for-the-win/)、スーカント・ハーラ氏の[Classy Monad Transformers](https://www.youtube.com/watch?v=QtZJATIPB0k)、ルカ・ヤコボウィッツ氏の[Optimizing Tagless Final](https://lukajcb.github.io/blog/functional/2018/01/03/optimizing-tagless-final.html)、ヴィンセント・マルケス氏の[Index your state](https://www.youtube.com/watch？v=JPVagd9W4Lo)、ガブリエル・ゴンザレス氏の[The Continuation Monad](http://www.haskellforall.com/2012/12/the-continuation-monad.html)、およびイ・リン・ウェイ氏とザイナブ・アリ氏によるHack The Towerミートアップにおけるチュートリアルなどです。
 
 <!--
 The helpul souls who patiently explained things to me: Merlin Göttlinger, Edmund
