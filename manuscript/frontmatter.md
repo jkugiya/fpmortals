@@ -25,13 +25,13 @@ writing a web application.
 -->
 # 本書について
 本書は、Javaの開発経験があり、**関数型プログラミング**（FP）に懐疑心と好奇心の両方を持っているような、
-典型的なScala開発者に向けて書かれています。本書では、Webアプリケーションの作成を含む典型的な例を用いてあらゆる概念の妥当性を示します。
+典型的なScala開発者に向けて書きました。本書では、Webアプリケーションの作成といった典型的な例を用いて、関数型プログラミングのあらゆる概念が有用であることを示します。
 
 <!--
 This book uses [Scalaz 7.2](https://github.com/scalaz/scalaz), the most popular, stable, principled and
 comprehensive Functional Programming framework for Scala.
 -->
-本書では、Scalaにおいて最も有名かつ安定して、包括的な関数型プログラミングの原則に基づいたフレームワークである[Scalaz 7.2](https://github.com/scalaz/scalaz)を使用します。
+本書では、Scalaにおいて最も著名かつ安定していて、包括的な関数型プログラミングの原則に基づいたフレームワークである[Scalaz 7.2](https://github.com/scalaz/scalaz)を使用します。
 
 <!--
 This book is designed to be read from cover to cover, in the order presented,
@@ -41,7 +41,7 @@ children, and progress to Riemann / Einstein / Maxwell if we become students of
 physics.
 -->
 
-本書は先頭から最後まで順番に読んでいくものとして構成しています。例えば、初めの方の章では後の章で疑問を投げかけるような
+本書の構成は先頭から最後まで順番に読んでいくようになっています。例えば、初めの方の章では後の章で疑問を投げかけるような
 コーディングスタイルを奨めています。子供のときにはニュートンの重力理論を学び、物理学生になってからリーマンやアインシュタイン、
 マクスウェルの理論を学ぶのと同じです。
 
@@ -55,7 +55,7 @@ descriptions presented in this book.
 
 本を読んでいくのにコンピュータは必要ではありませんが、Scalazのソースコードを勉強することをお勧めします。
 いくつか複雑なコードスニペットが[本書のコード例](https://github.com/fommil/fpmortals/)として出てきますが、
-もっと実践的な演習を望む人はScalaz(および、サンプルのアプリケーション)を本書に記載されている部分的な説明を
+もっと実践的な演習を望む方はScalaz(および、サンプルのアプリケーション)を本書に記載されている部分的な説明を
 用いて実装することをお勧めします。
 
 <!--
@@ -90,14 +90,14 @@ This book is **Copyleft**: if you change the book and distribute your own versio
 you must also pass these freedoms to its recipients.
 -->
 
-この本は**コピーレフト**です。本に対する変更を行って自らのバージョンの配布を行う場合は、配布するバージョンにもこれらの自由を与えなければいけません。
+本書は**コピーレフト**です。本書に対する変更を行って自らのバージョンの配布を行う場合は、配布するバージョンにもこれらの自由を与えなければいけません。
 
 <!--
 This book uses the [Creative Commons Attribution ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode) (CC
 BY-SA 4.0) license.
 -->
 
-この本は[CC-BY-SA 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode)ライセンスを用います。
+本書は[CC-BY-SA 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/legalcode)ライセンスを用います。
 
 <!--
 All original code snippets in this book are separately [CC0](https://wiki.creativecommons.org/wiki/CC0) licensed, you may use
@@ -105,7 +105,7 @@ them without restriction. Excerpts from Scalaz and related libraries maintain
 their license, reproduced in full in the appendix.
 -->
 
-この本に収められているソースコードについては、制限なくそれらを利用できるように別途[CC0](https://wiki.creativecommons.org/wiki/CC0)ライセンスを用います。 Scalazや関連ライブラリからの引用については付録に記載しています。
+本書に収められているソースコードについては、制限なくそれらを利用できるように別途[CC0](https://wiki.creativecommons.org/wiki/CC0)ライセンスを用います。 Scalazや関連ライブラリからの引用については付録に記載しています。
 
 <!--
 The example application `drone-dynamic-agents` is distributed under the terms of
@@ -113,7 +113,7 @@ the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html): only the snippets in 
 -->
 
 `dron-dynamic-agents`というサンプルアプリケーションは[GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html)での配布なので、
-制限なしに利用できるのはこの本のスニペットのみです。
+制限なしに利用できるのは本書のスニペットのみです。
 
 <!--
 # Thanks
@@ -130,7 +130,7 @@ Miles Sabin for fixing a critical bug in the Scala compiler ([SI-2712](https://i
 -->
 47 degreesのディエゴ・エステバン・アロンソ・ブラス、ラウール・ラジャ・マルティネス、ピーター・ネイエンズ、および、ルナール・ビャナソン、トニー・モリス、ジョン・ド・ゴーズ、エドワード・クメット各氏らは関数型プログラミングの原則の説明において手助けをしてくれました。
 吉田憲治氏とジェイソン・ザーグ氏はScalazの主要な著者です。
-ポール・チュイザーノとマイルス・セイビンはScalaコンパイルの致命的なバグを修正してくれました。（[SI-2712]（https://issues.scala-lang.org/browse/SI -2712））
+ポール・チュイザーノとマイルス・セイビンはScalaコンパイルの致命的なバグを修正してくれました。（[SI-2712](https://issues.scala-lang.org/browse/SI-2712)）
 
 <!--
 Thanks to the readers who gave feedback on early drafts of this text.
@@ -139,7 +139,7 @@ Thanks to the readers who gave feedback on early drafts of this text.
 草稿段階においてフィードバックをしてくれた読者に感謝します。
 
 <!--
-Some material was particularly helpful for my own understanding of the concepts
+Some material was particularly helpful for my own understanding of the concept?
 that are in this book. Thanks to Juan Manuel Serrano for [All Roads Lead to
 Lambda](https://skillsmatter.com/skillscasts/9904-london-scala-march-meetup#video), Pere Villega for [On Free Monads](http://perevillega.com/understanding-free-monads), Dick Wall and Josh Suereth for [For:
 What is it Good For?](https://www.youtube.com/watch?v=WDaw2yXAa50), Erik Bakker for [Options in Futures, how to unsuck them](https://www.youtube.com/watch?v=hGMndafDcc8),
@@ -149,8 +149,8 @@ State](https://www.youtube.com/watch?v=JPVagd9W4Lo), Gabriel Gonzalez for [The C
 for their tutorials at Hack The Tower meetups.
 -->
 
-いくつかの資料は私がこの本を書くための概念を理解するのに特に役立ちました。
-フアン・マヌエル・セラーノ氏の[All Roads Lead to Lambda](https://skillsmatter.com/skillscasts/9904-london-scala-march-meetup#video)、ペレ・ヴィッレガ氏の[Free Monads](http：//perevillega.com/understanding-free-monads)、ディック・ウォール氏とジョシュ・スエース氏の[For：What is it For For？](https://www.youtube.com/watch?v=WDaw2yXAa50)、エリック・バッカー氏の[Options in Futures, how to unsuck them](https://www.youtube.com/watch?v=hGMndafDcc8)、ノエル・マーカム氏の[ADTs for the Win!](https://www.47deg.com/presentations/2017/06/01/ADT-for-the-win/)、スーカント・ハーラ氏の[Classy Monad Transformers](https://www.youtube.com/watch?v=QtZJATIPB0k)、ルカ・ヤコボウィッツ氏の[Optimizing Tagless Final](https://lukajcb.github.io/blog/functional/2018/01/03/optimizing-tagless-final.html)、ヴィンセント・マルケス氏の[Index your state](https://www.youtube.com/watch？v=JPVagd9W4Lo)、ガブリエル・ゴンザレス氏の[The Continuation Monad](http://www.haskellforall.com/2012/12/the-continuation-monad.html)、およびイ・リン・ウェイ氏とザイナブ・アリ氏によるHack The Towerミートアップにおけるチュートリアルなどです。
+いくつかの資料は私が本書を書くための概念を理解するのに特に役立ちました。
+フアン・マヌエル・セラーノ氏の[All Roads Lead to Lambda](https://skillsmatter.com/skillscasts/9904-london-scala-march-meetup#video)、ペレ・ヴィッレガ氏の[On Free Monads](http://perevillega.com/understanding-free-monads)、ディック・ウォール氏とジョシュ・スエース氏の[For: What is it Good For?](https://www.youtube.com/watch?v=WDaw2yXAa50)、エリック・バッカー氏の[Options in Futures, how to unsuck them](https://www.youtube.com/watch?v=hGMndafDcc8)、ノエル・マーカム氏の[ADTs for the Win!](https://www.47deg.com/presentations/2017/06/01/ADT-for-the-win/)、スーカント・ハーラ氏の[Classy Monad Transformers](https://www.youtube.com/watch?v=QtZJATIPB0k)、ルカ・ヤコボウィッツ氏の[Optimizing Tagless Final](https://lukajcb.github.io/blog/functional/2018/01/03/optimizing-tagless-final.html)、ヴィンセント・マルケス氏の[Index your State](https://www.youtube.com/watch?v=JPVagd9W4Lo)、ガブリエル・ゴンザレス氏の[The Continuation Monad](http://www.haskellforall.com/2012/12/the-continuation-monad.html)、およびイ・リン・ウェイ氏とザイナブ・アリ氏によるHack The Towerミートアップにおけるチュートリアルなどです。
 
 <!--
 The helpul souls who patiently explained things to me: Merlin Göttlinger, Edmund
