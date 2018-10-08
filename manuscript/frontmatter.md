@@ -160,13 +160,18 @@ Pillmore, Aaron Vargo, Tomas Mikula, Jean-Baptiste Giraudeau, Itamar Ravid, Ross
 A. Baker, Alexander Konovalov, Harrison Houghton, Alexandre Archambault,
 Christopher Davenport, Jose Cardona, Isaac Elliott.
 -->
+次に挙げるのは、私に辛抱強く物事を教えてくれた人たちです。マーリン・ゲットリンガー、エドモンド・ノーブル、ファビオ・ラベラ、アデルベルト・チャン、マイケル・ピルキスト、ポール・スナイプス、ダニエル・スピワック、スティーブン・コンパル、ブライアン・マッケンナ、ライアン・デュルキッチ、ペドロ・ロドリゲス、エミリー・ピルモア、アーロン・ヴァルゴ、トーマス・ミクラ、ジャン＝バプティスト・ジウロドー、イタマール・ラヴィド、ロス・A・ベイカー、アレクサンダー・コナヴァロフ、ハリソン・ホートン、アレクサンドル・アーチェックンボルト、クリストファー・ダベンポート、ホセ・カルデナ、アイザック・エリオット。
 
 <!--
 # Practicalities
 -->
 
+# 本書のプログラムについて
+
 <!-- To set up a project that uses the libraries presented in this book, use a recent -->
 <!-- version of Scala with FP-specific features enabled (e.g. in `build.sbt`): -->
+
+本書で紹介するライブラリをプロジェクトで利用するには、最新のScalaのバージョンを使用して、関数型プログラミングの機能を有効にしてください。
 
 {lang="text"}
 ~~~~~~~~
@@ -189,6 +194,8 @@ Christopher Davenport, Jose Cardona, Isaac Elliott.
 <!-- In order to keep our snippets short, we will omit the `import` -->
 <!-- section. Unless told otherwise, assume that all snippets have the -->
 <!-- following imports: -->
+
+本文中のスニペットの記述を短くするため、`import`セクションは省略します。 特に断りのない限り、すべてのスニペットに次のインポートがあることを前提とします。
 
 {lang="text"}
 ~~~~~~~~
