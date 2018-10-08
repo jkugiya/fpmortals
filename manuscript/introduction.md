@@ -2,20 +2,31 @@
 # Introduction
 -->
 
+# はじめに
+
 <!--
 It is human instinct to be sceptical of a new paradigm. To put some
 perspective on how far we have come, and the shifts we have already
 accepted on the JVM, let's start with a quick recap of the last 20
 years.
 -->
+人間は新しいパラダイムには懐疑的なものです。長い道のりを辿って既にJVMに取り入れられた変化を俯瞰するため、
+この20年の間に起きたことについておさらいしておきましょう。
 
 <!--
 Java 1.2 introduced the Collections API, allowing us to write methods
 that abstracted over mutable collections. It was useful for writing
 general purpose algorithms and was the bedrock of our codebases.
+-->
 
+Java 1.2でコレクションAPIが導入され、可変コレクションによって抽象化されたメソッドを利用できるようになりました。
+このAPIは一般的用途のアルゴリズムを記述するのに便利で、私たちのコードベースの基盤になりました。
+
+<!--
 But there was a problem, we had to perform runtime casting:
 -->
+
+しかし、実行時にキャストを行わなければならないという問題がありました。
 
 {lang="text"}
 ~~~~~~~~
@@ -30,11 +41,17 @@ that were effectively `CollectionOfThings`, and the Collection API
 became implementation detail.
 -->
 
+このため、開発者はビジネスロジックを`CollectionOfThings`といったドメインオブジェクトに定義し、
+コレクションAPIは実装の詳細として扱うといった対応が行われました。
+
 <!--
 In 2005, Java 5 introduced *generics*, allowing us to define
 `Collection<Thing>`, abstracting over the container **and** its
 elements. Generics changed how we wrote Java.
 -->
+
+2005年にJava 5で*ジェネリクス*が導入され、`Collection<Thing>`といった記述ができるようになりました。
+ジェネリクスによって入れ物に*加えて*要素を抽象化できるようになり、私たちが記述するJavaのコードに変化をもたらしました。
 
 <!--
 The author of the Java generics compiler, Martin Odersky, then created
@@ -42,6 +59,9 @@ Scala with a stronger type system, immutable data and multiple
 inheritance. This brought about a fusion of object oriented (OOP) and
 functional programming (FP).
 -->
+
+それから、Javaのジェネリクスコンパイラの著者であるマーチン・オダスキー氏は、強力な型システムと不変なデータ構造と多重継承を備えたScalaを作りました。
+Scalaは、オブジェクト指向（OOP）と関数型プログラミング（FP）の融合をもたらしました。
 
 <!--
 For most developers, FP means using immutable data as much as
