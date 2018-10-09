@@ -98,10 +98,15 @@ Scalaにおいて実行を抽象化する方法がないのと同じように、
 ## Abstracting over Execution
 -->
 
+## 実行の抽象化
+
 <!--
 Say we want to interact with the user over the command line interface. We can
 `read` what the user types and we can `write` a message to them.
 -->
+
+コマンドラインでの対話を例に考えてみましょう。このとき、コマンドラインはユーザーの入力を*読み取り*、
+インターフェースに対してメッセージを*書き込む*ことができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -121,6 +126,8 @@ How do we write generic code that does something as simple as echo the user's
 input synchronously or asynchronously depending on our runtime implementation?
 -->
 
+それでは、単純に入力をエコーするプログラムを同期的または非同期的に実行するとき、実行の方法を一般化するにはどのようにすればよいでしょうか？
+
 <!--
 We could write a synchronous version and wrap it with `Future` but now
 we have to worry about which thread pool we should be using for the
@@ -129,16 +136,25 @@ blocking. In either case, it is a lot of boilerplate and we are
 fundamentally dealing with different APIs that are not unified.
 -->
 
+同期実行するコードを書いてから`Future`でラップすることもできますが、その場合もスレッドプールで動作するのかを気にかける必要があります。
+`Await.result`を使うこともできますが、これはスレッドをブロックすることになります。
+どちらの場合も沢山のボイラプレートを書く必要があり、根本的に統一されていない様々なAPIを使うことになります。
+
 <!--
 We can solve the problem, like Java 1.2, with a common parent using the *higher
 kinded types* (HKT) Scala language feature.
 -->
+
+この問題は、かつてのJava 1.2と似ていて共通性もありますが、Scalaでは*高カインド型*という言語機能で解決できます。
 
 <!--
 A> **Higher Kinded Types** allow us to use a *type constructor* in our type
 A> parameters, which looks like `C[_]`. This is a way of saying that
 A> whatever `C` is, it must take a type parameter. For example:
 -->
+A> **高カインド型**というのは、`C[_]`のような型パラメータと一緒に*型コンストラクタ*を使用できる機能です。
+A> ある型コンストラクタが、`C`がどんなものであれ、型パラメータ`C[_]`を取らなければならないという宣言をすることができます。
+A> 以下はコード例です。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -148,9 +164,11 @@ A>   }
 A> ~~~~~~~~
 A> 
 <!--
-A> `List` is a type constructor because it takes a type (e.g. `Int`) and constructs
-A> a type (`List[Int]`). We can implement `Foo` using `List`:
+`List` is a type constructor because it takes a type (e.g. `Int`) and constructs
+a type (`List[Int]`). We can implement `Foo` using `List`:
 -->
+A> `List`は型（例えば`Int`）を1つ受け取ることができるので型コンストラクタの一種です。（例えば、`List[Int]`）
+A> Listを使った`Foo`の実装は以下のようになります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
