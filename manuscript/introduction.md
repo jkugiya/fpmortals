@@ -73,6 +73,9 @@ scratching the surface of the benefits of FP, as we will discover in
 this book.
 -->
 
+ほとんどの開発者にとって、FPとはできる限り不変なデータを使用するということですが、その場合でも変更可能な状態は依然として分離して管理する必要があります。例えば、Akkaのアクターや`同期`クラスです。
+これらを使用したFPは、Javaと比べて並列や分散を扱うプログラムを簡単にします。しかし、本書を読むことで、これらがFPの利点と思われるところを傷つけているということがわかるでしょう。
+
 <!--
 Scala also brings `Future`, making it easy to write asynchronous
 applications. But when a `Future` makes it into a return type,
@@ -80,10 +83,16 @@ applications. But when a `Future` makes it into a return type,
 tests, which are now subject to arbitrary timeouts.
 -->
 
+Scalaでは`Future`を使って非同期アプリケーションの記述を簡単にすることもできます。
+しかし、`Future`を戻り値型にすると、テストを含めて*全て*をそれに合わせて書き直さなければいけません。
+この場合、テストではタイムアウトを使う必要があります。
+
 <!--
 We have a problem similar to Java 1.0: there is no way of abstracting
 over execution, much as we had no way of abstracting over collections.
 -->
+
+Scalaにおいて実行を抽象化する方法がないのと同じように、Java 1.0でもコレクションを抽象化する方法がありませんでした。
 
 <!--
 ## Abstracting over Execution
