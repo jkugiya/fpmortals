@@ -152,8 +152,8 @@ A> **Higher Kinded Types** allow us to use a *type constructor* in our type
 A> parameters, which looks like `C[_]`. This is a way of saying that
 A> whatever `C` is, it must take a type parameter. For example:
 -->
-A> **高カインド型**というのは、`C[_]`のような型パラメータと一緒に*型コンストラクタ*を使用できる機能です。
-A> ある型コンストラクタが、`C`がどんなものであれ、型パラメータ`C[_]`を取らなければならないという宣言をすることができます。
+A> **高カインド型**は、`C[_]`のような型パラメータと一緒に*型コンストラクタ*を使用できる機能です。
+A> ある型コンストラクタが、`C`がどんなものであれ、型パラメータ`C[_]`を取るという宣言をすることができます。
 A> 以下はコード例です。
 A> 
 A> {lang="text"}
@@ -182,6 +182,8 @@ A> We can implement `Foo` for anything with a type parameter hole, e.g.
 A> `Either[String, _]`. Unfortunately it is a bit clunky and we have to
 A> create a type alias to trick the compiler into accepting it:
 -->
+A> `Either[String, _]`のように、型パラメータにホール(`_`の部分のこと)を1つだけ持つ型に対しても`Foo`を実装することもできます。
+A> 残念ながらこの場合、少し不格好になりますが、型エイリアスを使ってコンパイルを通します。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -196,6 +198,10 @@ A> can be used to trick the compiler into accepting types with one hole
 A> when it would otherwise think there are two, like when we implement
 A> `Foo` with `EitherString`:
 -->
+A> 型エイリアスは単に型を置き換えるだけで、新しい型を定義するわけではないので、何らかの型安全性をもたらすものではありません。
+A> コンパイラは`EitherString[T]`と`Either[String, T]`を置き換えるだけです。
+A> しかし、型エイリアスを使うことで、コンパイラにホールが1つだけであるかのように見せることができるので、
+A> `Foo`に対して`EitherString`を与えるように、型パラメータが2つある型でも3つある型でも高カインド型の実装のコンパイルを通すことができます。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -208,6 +214,8 @@ A>
 A> Alternatively, the [kind projector](https://github.com/non/kind-projector/) plugin allows us to avoid the `type`
 A> alias and use `?` syntax to tell the compiler where the type hole is:
 -->
+A> 型エイリアスを使う代替の方法として、[kind projector](https://github.com/non/kind-projector/)プラグインを使用すると、
+A> ホールの部分に`?`を使って高カインド型の実装のコンパイルを通すことができます。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -220,6 +228,8 @@ A>
 A> Finally, there is this one weird trick we can use when we want to ignore the
 A> type constructor. Define a type alias to be equal to its parameter:
 -->
+A> 最後に、型コンストラクタを無視したいときに使用する少し変わったトリックを紹介します。
+A> 以下のように型コンストラクタのエイリアスを、型コンストラクタの型パラメータの型自身で定義します。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -231,6 +241,7 @@ A> Before proceeding, understand that `Id[Int]` is the same thing as `Int`, by
 A> substituting `Int` into `T`. Because `Id` is a valid type constructor we can use
 A> `Id` in an implementation of `Foo`
 -->
+ここで、`Id[Int]`という型が`Int`と同じであることを理解しておいてください。`Id`は有効な型コンストラクタなので、`Foo`の実装で`Id`を使うことができます。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -245,7 +256,8 @@ defining `Now` to construct to its type parameter (like `Id`), we can
 implement a common interface for synchronous and asynchronous
 terminals:
 -->
-
+`Terminal`という高カインド型に対して`C[_]`という型コンストラクタを与える場合を考えてみましょう。
+`Id`と同じように、与えられた型パラメータの型を返す`Now`という型コンストラクタを定義することで、同期端末と非同期端末の共通インターフェースを実装できます。
 {lang="text"}
 ~~~~~~~~
   trait Terminal[C[_]] {
