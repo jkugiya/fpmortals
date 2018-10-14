@@ -283,6 +283,8 @@ We can think of `C` as a *Context* because we say "in the context of
 executing `Now`" or "in the `Future`".
 -->
 
+「`Now`のコンテキストにおける実行」、「`Future`のコンテキストにおける実行」という言い方ができるので、`C`をコンテキストと考えることができます。
+
 <!--
 But we know nothing about `C` and we cannot do anything with a
 `C[String]`. What we need is a kind of execution environment that lets
@@ -290,6 +292,10 @@ us call a method returning `C[T]` and then be able to do something
 with the `T`, including calling another method on `Terminal`. We also
 need a way of wrapping a value as a `C[_]`. This signature works well:
 -->
+しかし、`C`が具体的に何であるかはわからないし、`C[String]`のような型を使うわけにもいきません。
+実行についてわかっていることは、何らかの実行環境があり、その中で`C[T]`型を返すメソッドを呼び出して
+`T`について何かを行い、`Terminal`の中でまた他のメソッドを呼び出すことができるということだけです。
+こうした振る舞いも、以下のように値を`C[_]`という型でラップすることで表現できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -300,6 +306,7 @@ need a way of wrapping a value as a `C[_]`. This signature works well:
 ~~~~~~~~
 
 <!-- letting us write: -->
+これを使ったコードは以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -316,16 +323,19 @@ We can now share the `echo` implementation between synchronous and
 asynchronous codepaths. We can write a mock implementation of
 `Terminal[Now]` and use it in our tests without any timeouts.
 -->
+`echo`の実装も同期実行するコードと非同期実行するコードで共通の実装を使うことができます。
+`Terminal[Now]`でモックの実装を書くことで、それをタイムアウトを使うことなく使用できます。
 
 <!--
 Implementations of `Execution[Now]` and `Execution[Future]` are
 reusable by generic methods like `echo`.
 -->
+`Execution[Now]`と`Execution[Future]`の実装は、`echo`のように一般化されたメソッドで再利用できます。
 
 <!--
 But the code for `echo` is horrible!
 -->
-
+しかし、この`echo`のコードは中々苦しいですよね？
 <!--
 The `implicit class` Scala language feature gives `C` some methods.
 We will call these methods `flatMap` and `map` for reasons that will
@@ -333,6 +343,11 @@ become clearer in a moment. Each method takes an `implicit
 Execution[C]`, but this is nothing more than the `flatMap` and `map`
 that we're used to on `Seq`, `Option` and `Future`
 -->
+ここで、`implicit class`というScalaの言語機能を使って`C`にいくつかのメソッドを追加します。
+`flatMap`と`map`というメソッドを付け加えていますが、この理由は後で明らかにします。
+それぞれのメソッドは`implicit Execution[C]`を引数として受け取りますが、これによって`flatMap`と`map`が
+`Seq`や`Option`、`Future`などのものよりも強力になります。
+
 
 {lang="text"}
 ~~~~~~~~
@@ -358,6 +373,8 @@ We can now reveal why we used `flatMap` as the method name: it lets us
 use a *for comprehension*, which is just syntax sugar over nested
 `flatMap` and `map`.
 -->
+メソッドの名前として`flatMap`を使ったのは、これによってfor内包表記を使用できるためです。
+for内包表記はネストした`flatMap`と`map`のシンタックスシュガーです。
 
 {lang="text"}
 ~~~~~~~~
@@ -374,7 +391,8 @@ except `chain` is `bind` and `create` is `pure`. We say that `C` is *monadic*
 when there is an implicit `Monad[C]` available. In addition, Scalaz has the `Id`
 type alias.
 -->
-
+この`Execution`は`bind`ではなく`chain`、`pure`ではなく`create`という名前を用いることを除いてはScalazの`Monad`と同じシグネチャを持ちます。
+暗黙の`Monad[C]`を利用できるとき、`C`は*モナディック*であるといいます。Scalazには`Id`の型エイリアスもあります。
 <!--
 The takeaway is: if we write methods that operate on monadic types,
 then we can write sequential code that abstracts over its execution
@@ -383,7 +401,9 @@ asynchronous execution but it can also be for the purpose of more
 rigorous error handling (where `C[_]` is `Either[Error, _]`), managing
 access to volatile state, performing I/O, or auditing of the session.
 -->
-
+ここでわかったことは、モナディック型でメソッドを記述することによって、実行コンテキストを抽象化した逐次的なコードを 記述することができるということです。
+同期実行と非同期実行を例としてあげましたが、より厳密なエラー処理（この場合、`C[_]`は`Either[Error, _]`です。）や
+揮発的状態へのアクセス管理、I/O処理、セッションの監査といったコンテキストを記述することもできます。
 <!--
 ## Pure Functional Programming
 -->
