@@ -401,30 +401,38 @@ asynchronous execution but it can also be for the purpose of more
 rigorous error handling (where `C[_]` is `Either[Error, _]`), managing
 access to volatile state, performing I/O, or auditing of the session.
 -->
-ここでわかったことは、モナディック型でメソッドを記述することによって、実行コンテキストを抽象化した逐次的なコードを 記述することができるということです。
+ここでわかったことは、モナディック型でメソッドを記述することによって、実行コンテキストを抽象化した逐次的なコードを記述することができるということです。
 同期実行と非同期実行を例としてあげましたが、より厳密なエラー処理（この場合、`C[_]`は`Either[Error, _]`です。）や
 揮発的状態へのアクセス管理、I/O処理、セッションの監査といったコンテキストを記述することもできます。
 <!--
 ## Pure Functional Programming
 -->
 
+## 純粋関数型プログラミング
 <!--
 Functional Programming is the act of writing programs with *pure functions*.
 Pure functions have three properties:
 -->
+関数型プログラミングを行うということは、*純粋関数*を書くということです。
+純粋関数には3つの特性があります。
 
 <!--
 -   **Total**: return a value for every possible input
 -   **Deterministic**: return the same value for the same input
 -   **Inculpable**: no (direct) interaction with the world or program state.
 -->
-
+-   **完全性**: 可能なすべての入力に対して値を返します。
+-   **決定性**: 同一の入力に対しては同一の値を返します。
+-   **純粋性**: 関数は現実の世界やプログラムの状態と（直接的には）対話を行いません。
 <!--
 Together, these properties give us an unprecedented ability to reason about our
 code. For example, input validation is easier to isolate with totality, caching
 is possible when functions are deterministic, and interacting with the world is
 easier to control, and test, when functions are inculpable.
 -->
+これらの特性を組み合わせると、飛躍的にプログラムがわかりやすくなります。
+例えば、入力値の検証は完全性があることで簡単になります。キャッシュを行うには関数に決定性がなければいけません。
+関数が純粋であれば、現実の世界との対話の制御やテストが容易になります。
 
 <!--
 The kinds of things that break these properties are *side effects*: directly
@@ -432,11 +440,15 @@ accessing or changing mutable state (e.g. maintaining a `var` in a class or
 using a legacy API that is impure), communicating with external resources (e.g.
 files or network lookup), or throwing and catching exceptions.
 -->
+このような特性を破壊してしまうのが*副作用*です。
+変更可能な状態への直接的なアクセスやその変更（例えば、あるクラスの中の`var`を使った変数の操作や、純粋ではないレガシーなAPIの使用）や、
+外部資源との通信（ファイルやネットワークの参照）、例外の送出と補足、といったものは全て副作用です。
 
 <!--
 We write pure functions by avoiding exceptions, and interacting with the world
 only through a safe `F[_]` execution context.
 -->
+例外や現実世界との対話の記述をを避けるために、安全な`F[_]`という形で実行コンテキストを記述しました。
 
 <!--
 In the previous section, we abstracted over execution and defined `echo[Id]` and
@@ -444,6 +456,9 @@ In the previous section, we abstracted over execution and defined `echo[Id]` and
 perform any side effects, because it is pure. However, if we use `Future` or
 `Id` as the execution context, our application will start listening to stdin:
 -->
+前節では、実行を抽象化し、`echo[Id]`や`echo[Future]`という定義を行いました。
+`echo`は純粋なので、副作用を起こすことなどないと考えている方もいるでしょう。
+しかし、実行コンテキストとして`Future`や`Id`を使用する場合のアプリケーションの記述は以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -456,27 +471,31 @@ result of running `echo` once. `Future` conflates the definition of a program
 with *interpreting* it (running it). As a result, applications built with
 `Future` are difficult to reason about.
 -->
-
+このコードには純粋性はなく、関数型プログラミングのコードでもありません。`futureEcho`は`echo`を一度呼び出した結果です。
+`Future`はプログラムの定義と*解釈*（定義されたプログラムの実行）を一度に行ってしまいます。このため、`Future`を使ったアプリケーションは難しいのです。
 <!--
 A> An expression is *referentially transparent* if it can be replaced with its
 A> corresponding value without changing the program's behaviour.
 -->
+A> 式をプログラムの振る舞いを変えることなく式の値と置き換えることができるとき、その式は*参照透過*であるといいます。
 A> 
 <!--
 A> Pure functions are referentially transparent, allowing for a great deal of code
 A> reuse, performance optimisation, understanding, and control of a program.
 -->
+A> 純粋関数は参照透過であることによって、再利用やパフォーマンスの最適化、可読性やプログラムの制御といった点において大きな利点を持つことができます。
 A> 
 <!--
 A> Impure functions are not referentially transparent. We cannot replace
 A> `echo[Future]` with a value, such as `val futureEcho`, since the pesky user can
 A> type something different the second time.
 -->
-
+A> 非純粋関数は参照透過ではありません。
+A> 意地の悪いユーザなら2度目の呼び出しで何か異なる値を得ることができるので、`echo[Future]`というコードを`val futureEcho`のような値で置き換えることはできません。
 <!--
 We can define a simple safe `F[_]` execution context
 -->
-
+しかし、安全な`F[_]`の実行コンテキストは簡単に定義できます。
 {lang="text"}
 ~~~~~~~~
   final class IO[A](val interpret: () => A) {
@@ -493,7 +512,8 @@ which lazily evaluates a thunk. `IO` is just a data structure that references
 (potentially) impure code, it isn't actually running anything. We can implement
 `Terminal[IO]`
 -->
-
+このコードは与えられた式を遅延評価します。`IO`は非純粋なコード（純粋なコードでも構いません）を参照するただのデータ構造で、
+実際には何も実行していません。これに対応した`Treminal[IO]`を実装してみましょう。
 {lang="text"}
 ~~~~~~~~
   object TerminalIO extends Terminal[IO] {
@@ -504,6 +524,7 @@ which lazily evaluates a thunk. `IO` is just a data structure that references
 <!--
 and call `echo[IO]` to get back a value
 -->
+そして、`echo[IO]`を呼び出して値を得ます。
 
 {lang="text"}
 ~~~~~~~~
@@ -517,11 +538,15 @@ map over a `Future`. `IO` keeps us honest that we are depending on some
 interaction with the world, but does not prevent us from accessing the output of
 that interaction.
 -->
+この定義は実行する作業の定義に過ぎないので、`val delayed`は再利用することができます。
+`Future`で`map`関数を使うのと同じように、`String`に対して`map`関数を使って追加のプログラムを合成することができます。
+`IO`はプログラムが現実の世界と何かやりとりするという事実に対して正直ですが、 プログラムのユーザがその対話の出力にアクセスすることを妨げません。
 
 <!--
 The impure code inside the `IO` is only evaluated when we `.interpret()` the
 value, which is an impure action
 -->
+`IO`内部の非純粋なコードは非純粋な操作を表す`.interpret()`を実行したときのみ評価されます。
 
 {lang="text"}
 ~~~~~~~~
@@ -532,10 +557,11 @@ value, which is an impure action
 An application composed of `IO` programs is only interpreted once, in the `main`
 method, which is also called *the end of the world*.
 -->
-
+`IO`でプログラムを合成したアプリケーションは、`main`関数の中で一度だけ実行されます。
+`main`関数は*世界の最果て*とも呼ばれます。
 <!--
 In this book, we expand on the concepts introduced in this chapter and show how
 to write maintainable, pure functions, that achieve our business's objectives.
 -->
-
+本書では、この章で紹介した概念を更に拡げ、ビジネス目的の達成を手助けしてくれる、保守性のある純粋な関数を記述する方法を明らかにしていきます。
 
