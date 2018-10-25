@@ -368,14 +368,24 @@ A> `for`内包表記は基本的に逐次処理を記述するためのもので
 A> 後の章では並列処理を記述するのにずっと適した方法を紹介します。
 A> ネタバレしておくと、`Future`を使わないということです。
 
+<!--
 ## Unhappy path
+-->
+## 失敗経路
 
+<!--
 So far we've only looked at the rewrite rules, not what is happening in `map`
 and `flatMap`. Consider what happens when the `for` context decides that it
 cannot proceed any further.
+-->
+これまでの話はコードの書き換えに関する話のみで、`map`や`flatMap`によって何が起きるのか、という話はしていませんでした。
+`for`のコンテキストでこれ以上進行できなくなったとき、何が起きるのかを考えてみましょう。
 
+<!--
 In the `Option` example, the `yield` is only called when `i,j,k` are
 all defined.
+-->
+`Option`を例に取ります。以下のコードでは、`yield`は`i,j,k`の全てが定義されている場合のみ呼び出されます。
 
 {lang="text"}
 ~~~~~~~~
@@ -386,13 +396,20 @@ all defined.
   } yield (i + j + k)
 ~~~~~~~~
 
+<!--
 If any of `a,b,c` are `None`, the comprehension short-circuits with
 `None` but it doesn't tell us what went wrong.
+-->
+`a,b,c`のいずれかが`None`だった場合、内包表記による失敗経路の中断が起こり`None`を返しますが、使用者からは何が原因でそうなったのかはわかりません。
 
+<!--
 A> There are many functions in the wild that take `Option` parameters but actually
 A> require all parameters to exist. An alternative to throwing a runtime exception
 A> is to use a `for` comprehension, giving us totality (a return value for every
 A> input):
+-->
+A> `Option`をパラメータに受け取っておきながら、実際には値が存在することを期待している関数がよく見受けられます。
+A> 例外を投げてしまう代わりに、`for`内包表記を使うことで完全性を得ることができます。（全ての入力に対して値を返すということです）
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -405,18 +422,25 @@ A>     number <- someNumber
 A>   } yield s"$number ${name}s"
 A> ~~~~~~~~
 A> 
+<!--
 A> but this is verbose, clunky and bad style. If a function requires
 A> every input then it should make its requirement explicit, pushing the
 A> responsibility of dealing with optional parameters to its caller.
+-->
+A> しかし、このコードは冗長で良くないスタイルです。関数が全ての入力が存在することを期待するのであれば、
+A> 任意のパラメータの処理の責任を呼び出し側に持たせて、その要件を明らかにしておくべきです。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
 A>   def namedThings(name: String, num: Int) = s"$num ${name}s"
 A> ~~~~~~~~
 
+<!--
 If we use `Either`, then a `Left` will cause the `for` comprehension
 to short circuit with extra information, much better than `Option` for
 error reporting:
+-->
+`Either`を使う場合、`Left`による中断は`Option`の場合と比べると少し付加的な情報を持たせることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -428,7 +452,10 @@ error reporting:
   Left(sorry, no c)
 ~~~~~~~~
 
+<!--
 And lastly, let's see what happens with a `Future` that fails:
+-->
+最後に、`Future`が失敗したときに何が起こるのかを見ておきましょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -442,16 +469,25 @@ And lastly, let's see what happens with a `Future` that fails:
   caught java.lang.Throwable
 ~~~~~~~~
 
+<!--
 The `Future` that prints to the terminal is never called because, like
 `Option` and `Either`, the `for` comprehension short circuits.
+-->
+`Option`や`Either`と同じように、`for`内包表記によって失敗経路の中断が起きるため、ターミナルへの出力を行う`Future`は呼び出されません。
 
+<!--
 Short circuiting for the unhappy path is a common and important theme.
 `for` comprehensions cannot express resource cleanup: there is no way
 to `try` / `finally`. This is good, in FP it puts a clear ownership of
 responsibility for unexpected error recovery and resource cleanup onto
 the context (which is usually a `Monad` as we will see later), not the
 business logic.
-
+-->
+失敗経路の中断は普遍的かつ重要な課題です。
+`for`内包表記では`try`と`finally`のような仕組みがないため、資源のクリーンアップを表現することはできません。
+しかし、これでも構わないのです。
+関数型プログラミングでは、予期しないエラーの回復を行う責任は明快であり、
+資源のクリーンアップはビジネスロジックではなくコンテキスト（後に述べますが、これは通常`Monad`ではありません）が請け負います。
 
 ## Gymnastics
 
