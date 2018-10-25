@@ -1,23 +1,38 @@
-
+<!--
 # For Comprehensions
+-->
+# for内包表記
+<!--
+Scala's `for` comprehension is the ideal FP abstraction for sequential programs that interact with the world. Since we will be using it a lot, we're going to relearn the principles of `for` and how Scalaz can help us to write cleaner code.
+-->
+Scalaの`for`内包表記は、高カインド型を使って実行コンテキストを抽象化した逐次プログラムが現実世界との相互作用を行うための、
+関数型プログラミングにおける理想的な抽象表現です。
+for内包表記は多用するので、for内包表記の原則とScalazがどのようにより綺麗なコードを書くことに役立つのかを復習しておきましょう。
 
-Scala's `for` comprehension is the ideal FP abstraction for sequential
-programs that interact with the world. Since we will be using it a lot,
-we're going to relearn the principles of `for` and how Scalaz can help
-us to write cleaner code.
-
+<!--
 This chapter doesn't try to write pure programs and the techniques are
 applicable to non-FP codebases.
+-->
+この章は特に純粋なプログラムを書くとわけではないので、ここで紹介する手法は関数型プログラミング以外でも役立ちます。
 
-
+<!--
 ## Syntax Sugar
-
+-->
+## 糖衣構文
+<!--
 Scala's `for` is just a simple rewrite rule, also called *syntax
 sugar*, that doesn't have any contextual information.
+-->
+Scalaの`for`は*糖衣構文*で、単純なプログラムの書き換えを行います。
+文脈によって書き換え方が変わったり、意味が変わったりすることはありません。
 
+<!--
 To see what a `for` comprehension is doing, we use the `show` and
 `reify` feature in the REPL to print out what code looks like after
 type inference.
+-->
+for内包表記が何をしているのかを確認するため、REPLの中で型推論がどのように行われたを表示する`show`と
+`reify`という機能を使用してみます。
 
 {lang="text"}
 ~~~~~~~~
@@ -34,10 +49,15 @@ type inference.
         ((k) => i.$plus(j).$plus(k)))))))
 ~~~~~~~~
 
+<!--
 There is a lot of noise due to additional sugarings (e.g. `+` is
 rewritten `$plus`, etc). We will skip the `show` and `reify` for brevity
 when the REPL line is `reify>`, and manually clean up the generated
 code so that it doesn't become a distraction.
+-->
+他にも糖衣している箇所（`+`が`$plus`に書き換えられている、など）があるので、少々見づらくなってしまいました。
+簡潔にするため、REPLの行が`reify>`のときは`show`と`reify`の出力を表示しないようにし、目障りにならないように、
+生成されたコードを手動で成形します。
 
 {lang="text"}
 ~~~~~~~~
@@ -49,15 +69,24 @@ code so that it doesn't become a distraction.
         k => i + j + k }}}
 ~~~~~~~~
 
+<!--
 The rule of thumb is that every `<-` (called a *generator*) is a
 nested `flatMap` call, with the final generator a `map` containing the
 `yield` body.
+-->
+それぞれの`<-`（これは*ジェネレータ*と呼びます）は`flatMap`の呼び出しで、最後の`yield`が`map`に
+なっていることがわかると思います。
 
-
+<!--
 ### Assignment
+-->
+### 代入
 
+<!--
 We can assign values inline like `ij = i + j` (a `val` keyword is not
 needed).
+-->
+インラインの中で`ij = i + j`のように値を代入することができます。（ここでは`val`キーワードは不要です）
 
 {lang="text"}
 ~~~~~~~~
@@ -74,11 +103,19 @@ needed).
         k => ij + k }}}
 ~~~~~~~~
 
+<!--
 A `map` over the `b` introduces the `ij` which is flat-mapped along
 with the `j`, then the final `map` for the code in the `yield`.
+-->
+`b`を`map`してから`ij`の計算を行い、`j`と一緒に`flatMap`した値をコードの中の`yield`に該当する最後の`map`に渡します。
 
+<!--
 Unfortunately we cannot assign before any generators. It has been
 requested as a language feature but has not been implemented:
+<https://github.com/scala/bug/issues/907>
+-->
+残念ながら、ジェネレータの先頭より前で代入を行うことはできません。
+言語機能として要望が上がっていますが、まだ実装されていません。
 <https://github.com/scala/bug/issues/907>
 
 {lang="text"}
@@ -90,7 +127,10 @@ requested as a language feature but has not been implemented:
   <console>:1: error: '<-' expected but '=' found.
 ~~~~~~~~
 
+<!--
 We can workaround the limitation by defining a `val` outside the `for`
+-->
+この制約は`for`の前で`val`を使うことで回避します。
 
 {lang="text"}
 ~~~~~~~~
@@ -98,7 +138,10 @@ We can workaround the limitation by defining a `val` outside the `for`
   scala> for { i <- a } yield initial + i
 ~~~~~~~~
 
+<!--
 or create an `Option` out of the initial assignment
+-->
+もしくは始めに`Option`を使って代入します。
 
 {lang="text"}
 ~~~~~~~~
@@ -108,8 +151,11 @@ or create an `Option` out of the initial assignment
          } yield initial + i
 ~~~~~~~~
 
+<!--
 A> `val` doesn't have to assign to a single value, it can be anything
 A> that works as a `case` in a pattern match.
+-->
+A> `val`による代入は必ずしも値が1つとは限りません。`case`の中のパターンマッチが動作するものであればどのような代入も行えます。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -123,7 +169,10 @@ A>   head: Int = 1
 A>   tail: List[Int] = List(2, 3)
 A> ~~~~~~~~
 A> 
+<!--
 A> The same is true for assignment in `for` comprehensions
+-->
+A> `for`内包表記も同様です。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -135,8 +184,11 @@ A>          } yield first
 A>   res: Some(hello)
 A> ~~~~~~~~
 A> 
+<!--
 A> But be careful not to miss any cases or there will be a runtime exception (a
 A> *totality* failure).
+-->
+A> しかし、（*完全性*の不備による）実行時例外を起こさないよう、ケース漏れに注意する必要があります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -144,11 +196,16 @@ A>   scala> val a :: tail = list
 A>   caught scala.MatchError: List()
 A> ~~~~~~~~
 
-
+<!--
 ### Filter
+-->
+### フィルタ
 
+<!--
 It is possible to put `if` statements after a generator to filter
 values by a predicate
+-->
+述語を使って値をフィルタするために、ジェネレータの後ろに`if`文を付け加えることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -166,10 +223,15 @@ values by a predicate
           k => i + j + k }}}
 ~~~~~~~~
 
+<!--
 Older versions of Scala used `filter`, but `Traversable.filter` creates new
 collections for every predicate, so `withFilter` was introduced as the more
 performant alternative. We can accidentally trigger a `withFilter` by providing
 type information, interpreted as a pattern match.
+-->
+古いバージョンのScalaでは`if`は`filter`の糖衣でしたが、`Traversable.filter`はそれぞれの述語ごとに
+新しいコレクションを生成してしまうため、より効率的な代替手段として`withFilter`が生まれました。
+`withFilter`に誤った型情報を与えると、パターンマッチによって中断されます。
 
 {lang="text"}
 ~~~~~~~~
@@ -181,13 +243,23 @@ type information, interpreted as a pattern match.
   }.map { case i: Int => i }
 ~~~~~~~~
 
+<!--
 Like assignment, a generator can use a pattern match on the left hand side. But
 unlike assignment (which throws `MatchError` on failure), generators are
 *filtered* and will not fail at runtime. However, there is an inefficient double
 application of the pattern.
+-->
+代入と同じようにジェネレータの左辺でパターンマッチを行うことができます。
+しかし、代入の場合とは違ってジェネレータはパターンにマッチしなかった場合は*フィルタ*を行い、実行時例外を起こしません。
+（代入の場合は`MatchError`を送出して失敗します）
+しかし、パターンマッチの二重適用は非効率です。
 
+<!--
 A> The compiler plugin [`better-monadic-for`](https://github.com/oleg-py/better-monadic-for) produces alternative, **better**,
 A> desugarings than the Scala compiler. This example is interpreted as:
+-->
+A> [`better-monadic-for`](https://github.com/oleg-py/better-monadic-for)というプラグインを使うと、
+A> Scalaコンパイラ**より良い**糖衣の解釈を行ってくれます。解釈結果は以下のようになります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -196,14 +268,23 @@ A>
 A>   a.map { (i: Int) => i}
 A> ~~~~~~~~
 A> 
+<!--
 A> instead of inefficient double matching (in the best case) and silent filtering
 A> at runtime (in the worst case). Highly recommended.
+-->
+非効率な重複したパターンマッチを行わず（最適な場合）、マッチしなかった場合（最悪の場合）も例外送出しないので、こちらがお勧めです。
 
-
+<!--
+### For Each
+-->
 ### For Each
 
+<!--
 Finally, if there is no `yield`, the compiler will use `foreach`
 instead of `flatMap`, which is only useful for side-effects.
+-->
+`yield`を使用しなかった場合、コンパイラは`flatMap`ではなく`foreach`を使用します。
+副作用がある場合はこちらのほうが有用です。
 
 {lang="text"}
 ~~~~~~~~
@@ -212,12 +293,19 @@ instead of `flatMap`, which is only useful for side-effects.
   a.foreach { i => b.foreach { j => println(s"$i $j") } }
 ~~~~~~~~
 
-
+<!--
 ### Summary
+-->
+### まとめ
 
+<!--
 The full set of methods supported by `for` comprehensions do not share
 a common super type; each generated snippet is independently compiled.
 If there were a trait, it would roughly look like:
+-->
+`for`内包表記で使用されるメソッドは全て共通のスーパータイプによって提供されるメソッドではありません。
+型とは無関係にコンパイル時にスニペットが生成されます。
+共通の型があるとしたら、概ね次のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -229,13 +317,20 @@ If there were a trait, it would roughly look like:
   }
 ~~~~~~~~
 
+<!--
 If the context (`C[_]`) of a `for` comprehension doesn't provide its
 own `map` and `flatMap`, all is not lost. If an implicit
 `scalaz.Bind[T]` is available for `T`, it will provide `map` and
 `flatMap`.
+-->
+コンテキスト（`C[_]`のことです）の`for`は独自の`map`や`flatMap`を生成したりしません。
+元々備わっているものが使用されます。暗黙の`scalaz.Bind[T]`がある場合、これが`map`や`flatMap`といったメソッドを提供してくれます。
 
+<!--
 A> It often surprises developers when inline `Future` calculations in a
 A> `for` comprehension do not run in parallel:
+-->
+A> `for`内包表記のインラインで`Future`が並列に実行されないということに開発者が驚くことがよくあります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -248,10 +343,14 @@ A>     j <- Future { anotherExpensiveCalc() }
 A>   } yield (i + j)
 A> ~~~~~~~~
 A> 
+<!--
 A> This is because the `flatMap` spawning `anotherExpensiveCalc` is
 A> strictly **after** `expensiveCalc`. To ensure that two `Future`
 A> calculations begin in parallel, start them outside the `for`
 A> comprehension.
+-->
+A> これは`flatMap`の呼び出しの中で、`anotherExpensiveCalc`が厳密に`expensiveCalc`の*後*に実行されるからです。
+A> 2つの`Future`が並列に実行されるようにするには、`for`内包表記の外側で`Future`を作るようにします。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -260,10 +359,14 @@ A>   val b = Future { anotherExpensiveCalc() }
 A>   for { i <- a ; j <- b } yield (i + j)
 A> ~~~~~~~~
 A> 
+<!--
 A> `for` comprehensions are fundamentally for defining sequential
 A> programs. We will show a far superior way of defining parallel
 A> computations in a later chapter. Spoiler: don't use `Future`.
-
+-->
+A> `for`内包表記は基本的に逐次処理を記述するためのものです。
+A> 後の章では並列処理を記述するのにずっと適した方法を紹介します。
+A> ネタバレしておくと、`Future`を使わないということです。
 
 ## Unhappy path
 
@@ -3051,7 +3154,7 @@ successors and predecessors:
     def min: Option[F]
     def max: Option[F]
   
-    @op("-+-") def succn(n: Int, a: F): F = ...
+    @op("-|-") def succn(n: Int, a: F): F = ...
     @op("---") def predn(n: Int, a: F): F = ...
   
     @op("|->" ) def fromToL(from: F, to: F): List[F] = ...
