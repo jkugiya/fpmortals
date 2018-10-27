@@ -324,7 +324,7 @@ own `map` and `flatMap`, all is not lost. If an implicit
 `flatMap`.
 -->
 コンテキスト（`C[_]`のことです）の`for`は独自の`map`や`flatMap`を生成したりしません。
-元々備わっているものが使用されます。暗黙の`scalaz.Bind[T]`がある場合、これが`map`や`flatMap`といったメソッドを提供してくれます。
+元々備わっているものが使用されます。暗黙の`scalaz.Bind[T]`がある場合、これの`map`や`flatMap`といったメソッドが使用されます。
 
 <!--
 A> It often surprises developers when inline `Future` calculations in a
@@ -489,19 +489,31 @@ business logic.
 関数型プログラミングでは、予期しないエラーの回復を行う責任は明快であり、
 資源のクリーンアップはビジネスロジックではなくコンテキスト（後に述べますが、これは通常`Monad`ではありません）が請け負います。
 
+<!--
 ## Gymnastics
+-->
+## 応用編
 
+<!--
 Although it is easy to rewrite simple sequential code as a `for`
 comprehension, sometimes we will want to do something that appears to
 require mental summersaults. This section collects some practical
 examples and how to deal with them.
+-->
+単純な逐次処理を`for`内包表記で書き直すのは簡単ですが、書き直すには何か一工夫必要だと感じられることもしばしばあります。
+本節ではこうした問題に関するいくつか実用的な例と対象方法を取り上げます。
 
-
+<!--
 ### Fallback Logic
-
+-->
+### フォールバック
+<!--
 Say we are calling out to a method that returns an `Option`. If it is not
 successful we want to fallback to another method (and so on and so on), like
 when we're using a cache:
+-->
+`Option`を返すメソッドについて考えてみましょう。
+キャッシュから値を取り出すような場合、それが成功しなかったときに別のメソッドにフォールバックしたいことがあります。
 
 {lang="text"}
 ~~~~~~~~
@@ -511,7 +523,10 @@ when we're using a cache:
   getFromRedis(key) orElse getFromSql(key)
 ~~~~~~~~
 
+<!--
 If we have to do this for an asynchronous version of the same API
+-->
+同じ処理を同じAPIで行う非同期バージョンは以下のようになるでしょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -519,7 +534,11 @@ If we have to do this for an asynchronous version of the same API
   def getFromSql(s: String): Future[Option[String]]
 ~~~~~~~~
 
+<!--
 then we have to be careful not to do extra work because
+-->
+この場合、少し注意しなけれならないことがあります。
+以下のコードをご覧ください。
 
 {lang="text"}
 ~~~~~~~~
@@ -529,8 +548,11 @@ then we have to be careful not to do extra work because
   } yield cache orElse sql
 ~~~~~~~~
 
+<!--
 will run both queries. We can pattern match on the first result but
 the type is wrong
+-->
+このコードは両方のクエリが実行されてしまいます。これを回避するため、始めの結果に対してパターンマッチを行ってみます。
 
 {lang="text"}
 ~~~~~~~~
@@ -543,7 +565,10 @@ the type is wrong
   } yield res
 ~~~~~~~~
 
+<!--
 We need to create a `Future` from the `cache`
+-->
+さらに、`cache`のパターンマッチの戻り値が`Future`を返すように型を揃える必要があります。
 
 {lang="text"}
 ~~~~~~~~
@@ -556,16 +581,27 @@ We need to create a `Future` from the `cache`
   } yield res
 ~~~~~~~~
 
+<!--
 `Future.successful` creates a new `Future`, much like an `Option` or
 `List` constructor.
+-->
+`Future.successful`は`Option`や`List`のコンストラクタと同じように新しい`Future`を作ります。
 
-
+<!--
 ### Early Exit
+-->
+### 早期退出
 
+<!--
 Say we have some condition that should exit early with a successful value.
+-->
+ある条件の時に後続の処理を行わずに値を返したい場合（早期退出する場合）を考えてみましょう。
 
+<!--
 If we want to exit early with an error, it is standard practice in OOP to throw
 an exception
+-->
+エラーを使って早期退出する場合、例外を使うのがオブジェクト指向プログラミングでは標準です。
 
 {lang="text"}
 ~~~~~~~~
@@ -576,7 +612,10 @@ an exception
   a * 10
 ~~~~~~~~
 
+<!--
 which can be rewritten async
+-->
+これも非同期処理にすることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -591,8 +630,11 @@ which can be rewritten async
   } yield b * 10
 ~~~~~~~~
 
+<!--
 But if we want to exit early with a successful return value, the simple
 synchronous code:
+-->
+エラーではなく正常な値を早期退出で返す場合の同期的なコードを素直に書くと以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -603,8 +645,11 @@ synchronous code:
   else a * getB
 ~~~~~~~~
 
+<!--
 translates into a nested `for` comprehension when our dependencies are
 asynchronous:
+-->
+これを`for`内包表記を使った非同期バージョンのコードに直す場合は以下のようにネストします。
 
 {lang="text"}
 ~~~~~~~~
@@ -617,12 +662,22 @@ asynchronous:
   } yield c
 ~~~~~~~~
 
+<!--
 A> If there is an implicit `Monad[T]` for `T[_]` (i.e. `T` is monadic) then Scalaz
 A> lets us create a `T[A]` from a value `a: A` by calling `a.pure[T]`.
 A> 
+-->
+A> `T[_]`に対する暗黙的な`Monad[T]`がある場合（つまり、`T`はモナディックです）、
+A> Scalazでは`a.pure[T]`を呼び出すことで`a: A`に対する`T[A]`型の値を生成することができます。
+A> 
+<!--
 A> Scalaz provides `Monad[Future]`, and `.pure[Future]` calls `Future.successful`.
 A> Besides `pure` being slightly shorter to type, it is a general concept that
 A> works beyond `Future`, and is therefore recommended.
+-->
+A> Scalazは`Monad[Future]`の実装を提供しており、`.pure[Future]`は`Future.successful`を呼び出します。
+A> `pure`という呼び出しは若干短く書くことができますし、`Future`だけではなく他の一般的な概念でも同様に動作させることができるので、
+A> こちらを使用する方をお勧めします。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
