@@ -688,11 +688,17 @@ A>          else for { b <- getB } yield a * b
 A>   } yield c
 A> ~~~~~~~~
 
-
+<!--
 ## Incomprehensible
+-->
+## 不可知性
 
+<!--
 The context we're comprehending over must stay the same: we cannot mix
 contexts.
+-->
+for内包表記を使って合成するコンテキストの型は同じである必要があります。
+異なるコンテキストを混ぜて使うことはできません。
 
 {lang="text"}
 ~~~~~~~~
@@ -709,11 +715,18 @@ contexts.
                 ^
 ~~~~~~~~
 
+<!--
 Nothing can help us mix arbitrary contexts in a `for` comprehension
 because the meaning is not well defined.
+-->
+`for`内包表記の中で異なるコンテキストが混在した場合の意味が明確に定義されていないので、
+任意のコンテキストを混ぜ込むことができないのです。
 
+<!--
 But when we have nested contexts the intention is usually obvious yet
 the compiler still doesn't accept our code.
+-->
+コンパイラは拒否しますが、入れ子になったコンテキストでコードの書き手が何をしたいかということは明らかです。
 
 {lang="text"}
 ~~~~~~~~
@@ -727,16 +740,28 @@ the compiler still doesn't accept our code.
   <console>:30: error: value * is not a member of Option[Int]
 ~~~~~~~~
 
+<!--
 Here we want `for` to take care of the outer context and let us write
 our code on the inner `Option`. Hiding the outer context is exactly
 what a *monad transformer* does, and Scalaz provides implementations
 for `Option` and `Either` named `OptionT` and `EitherT` respectively.
+-->
+ここで`for`内包表記に求められることは、外側のコンテキストを処理して、コードの書き手が内側の`Option`の処理を書けるようにすることです。
+外側のコンテキストを隠蔽するときは`モナド変換子`の出番です。
+Scalazは`Option`に対しては`OptionT`、`Either`に対しては`EitherT`という実装を提供しています。
 
+<!--
 The outer context can be anything that normally works in a `for`
 comprehension, but it needs to stay the same throughout.
+-->
+外側のコンテキストは`for`内包表記が動作するものであれば何でも構いませんが、内包表記の前後でコンテキストの型が維持されている必要があります。
 
+<!--
 We create an `OptionT` from each method call. This changes the context
 of the `for` from `Future[Option[_]]` to `OptionT[Future, _]`.
+-->
+それぞれのメソッドの呼び出しで`OptionT`を作るようにします。
+この変更によって`for`内包表記のコンテキストが`Future[Option[_]]`から`OptionT[Future, _]`になります。
 
 {lang="text"}
 ~~~~~~~~
@@ -747,7 +772,10 @@ of the `for` from `Future[Option[_]]` to `OptionT[Future, _]`.
   result: OptionT[Future, Int] = OptionT(Future(<not completed>))
 ~~~~~~~~
 
+<!--
 `.run` returns us to the original context
+-->
+`.run`を呼び出すと元のコンテキストを得ることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -755,9 +783,13 @@ of the `for` from `Future[Option[_]]` to `OptionT[Future, _]`.
   res: Future[Option[Int]] = Future(<not completed>)
 ~~~~~~~~
 
+<!--
 The monad transformer also allows us to mix `Future[Option[_]]` calls with
 methods that just return plain `Future` via `.liftM[OptionT]` (provided by
 scalaz):
+-->
+モナド変換子を使う場合、`Future`から`.liftM[OptionT]`（Scalazが提供するメソッドです）を
+呼び出すことで`Future[Option[_]]`と内側のコンテキストを持たない`Future`の処理を組み合わせることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -770,8 +802,11 @@ scalaz):
   result: OptionT[Future, Int] = OptionT(Future(<not completed>))
 ~~~~~~~~
 
+<!--
 and we can mix with methods that return plain `Option` by wrapping
 them in `Future.successful` (`.pure[Future]`) followed by `OptionT`
+-->
+外側のコンテキストを持たない`Option`の場合は、`Future.successful`（あるいは`.pure[Future]`）を`OptionT`でラップします。
 
 {lang="text"}
 ~~~~~~~~
@@ -785,9 +820,13 @@ them in `Future.successful` (`.pure[Future]`) followed by `OptionT`
   result: OptionT[Future, Int] = OptionT(Future(<not completed>))
 ~~~~~~~~
 
+<!--
 It is messy again, but it is better than writing nested `flatMap` and
 `map` by hand. We can clean it up with a DSL that handles all the
 required conversions into `OptionT[Future, _]`
+-->
+これでも面倒と言えば面倒ですが、ネストした`flatMap`や`map`を手で書くよりもマシでしょう。
+必要となる`OptionT[Future, _]`への変換を行うDSLを使うことでコードを綺麗にすることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -797,9 +836,12 @@ required conversions into `OptionT[Future, _]`
   def lift[A](a: A)               = liftOption(Option(a))
 ~~~~~~~~
 
+<!--
 combined with the `|>` operator, which applies the function on the
 right to the value on the left, to visually separate the logic from
 the transformers
+-->
+右辺の関数を左辺に適用する`|>`という演算子と組み合わせると、視覚的にもロジックと変換子の処理を分離できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -813,15 +855,19 @@ the transformers
   result: OptionT[Future, Int] = OptionT(Future(<not completed>))
 ~~~~~~~~
 
-A> `|>` is often called the *thrush operator* because of its uncanny resemblance to
-A> the cute bird. Those who do not like symbolic operators can use the alias
-A> `.into`.
+<!--
+`|>` is often called the *thrush operator* because of its uncanny resemblance to
+the cute bird. Those who do not like symbolic operators can use the alias
+`.into`.
+-->
+`|>`は形が可愛い小鳥に似ているので、*ツグミ演算子*と呼ばれることもあります。
+記号を使った演算子が好みでない方は`.into`というエイリアスを使用するといいでしょう。
 
-This approach also works for `Either` (and others) as the inner context, but
-their lifting methods are more complex and require parameters. Scalaz provides
-monad transformers for a lot of its own types, so it is worth checking if one is
-available.
-
+<!--
+This approach also works for `Either` (and others) as the inner context, but their lifting methods are more complex and require parameters. Scalaz provides monad transformers for a lot of its own types, so it is worth checking if one is available.
+-->
+ここで紹介した手法は`Either`（やその他のコンテキスト）でも有効ですが、外側のコンテキストに持ち上げる方法はより複雑でパラメータが必要になります。
+Scalazは様々な型に対応したモナド変換子を提供しているので、どのようなものが利用できるのかを調べてみると良いでしょう。
 
 # Application Design
 
