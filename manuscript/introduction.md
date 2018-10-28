@@ -60,7 +60,7 @@ inheritance. This brought about a fusion of object oriented (OOP) and
 functional programming (FP).
 -->
 
-それから、Javaのジェネリクスコンパイラの著者であるマーチン・オダスキー氏は、強力な型システムと不変なデータ構造と多重継承を備えたScalaを作りました。
+それから、Javaのジェネリクスコンパイラの著者であるマーチン・オダスキー氏は、強力な型システムと不変データ構造と多重継承を備えたScalaを作りました。
 Scalaは、オブジェクト指向（OOP）と関数型プログラミング（FP）の融合をもたらしました。
 
 <!--
@@ -73,7 +73,7 @@ scratching the surface of the benefits of FP, as we will discover in
 this book.
 -->
 
-ほとんどの開発者にとって、FPとはできる限り不変なデータを使用するということですが、その場合でも変更可能な状態は依然として分離して管理する必要があります。例えば、Akkaのアクターや`同期`クラスです。
+ほとんどの開発者にとって、FPとはできる限り不変データを使用するということですが、その場合でも可変状態は依然として分離して管理する必要があります。例えば、Akkaのアクターや`同期`クラスです。
 これらを使用したFPは、Javaと比べて並列や分散を扱うプログラムを簡単にします。しかし、本書を読むことで、これらがFPの利点と思われるところを傷つけているということがわかるでしょう。
 
 <!--
@@ -343,7 +343,7 @@ become clearer in a moment. Each method takes an `implicit
 Execution[C]`, but this is nothing more than the `flatMap` and `map`
 that we're used to on `Seq`, `Option` and `Future`
 -->
-ここで、`implicit class`というScalaの言語機能を使って`C`にいくつかのメソッドを追加します。
+ここで、`implicit class`（暗黙クラス）というScalaの言語機能を使って`C`にいくつかのメソッドを追加します。
 `flatMap`と`map`というメソッドを付け加えていますが、この理由は後で明らかにします。
 それぞれのメソッドは`implicit Execution[C]`を引数として受け取りますが、これによって`flatMap`と`map`が
 `Seq`や`Option`、`Future`などのものよりも強力になります。
@@ -373,7 +373,7 @@ We can now reveal why we used `flatMap` as the method name: it lets us
 use a *for comprehension*, which is just syntax sugar over nested
 `flatMap` and `map`.
 -->
-メソッドの名前として`flatMap`を使ったのは、これによってfor内包表記を使用できるためです。
+メソッドの名前として`flatMap`を使ったのは、これによって*for内包表記*を使用できるためです。
 for内包表記はネストした`flatMap`と`map`のシンタックスシュガーです。
 
 {lang="text"}
@@ -441,7 +441,7 @@ using a legacy API that is impure), communicating with external resources (e.g.
 files or network lookup), or throwing and catching exceptions.
 -->
 このような特性を破壊してしまうのが*副作用*です。
-変更可能な状態への直接的なアクセスやその変更（例えば、あるクラスの中の`var`を使った変数の操作や、純粋ではないレガシーなAPIの使用）や、
+可変状態への直接的なアクセスやその変更（例えば、あるクラスの中の`var`を使った変数の操作や、純粋ではないレガシーなAPIの使用）や、
 外部資源との通信（ファイルやネットワークの参照）、例外の送出と補足、といったものは全て副作用です。
 
 <!--
