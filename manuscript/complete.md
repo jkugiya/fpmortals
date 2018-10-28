@@ -1330,7 +1330,7 @@ which can also use infix notation:
 
 If each of the parallel operations returns a value in the same monadic
 context, we can apply a function to the results when they all return.
-Rewriting `update` to take advantage of this:
+Rewriting `initial` to take advantage of this:
 
 {lang="text"}
 ~~~~~~~~
@@ -10492,8 +10492,8 @@ A> {lang="text"}
 A> ~~~~~~~~
 A>   object MonadError {
 A>     sealed abstract class Ast[F[_], E, A]
-A>     final case class RaiseError[E, A](e: E) extends Ast[E, A]
-A>     final case class HandleError[F[_], E, A](fa: F[A], f: E => F[A]) extends Ast[E, A]
+A>     final case class RaiseError[F[_], E, A](e: E) extends Ast[F, E, A]
+A>     final case class HandleError[F[_], E, A](fa: F[A], f: E => F[A]) extends Ast[F, E, A]
 A>   
 A>     def liftF[F[_], E](implicit I: Ast[F, E, ?] :<: F): MonadError[F, E] = ...
 A>     ...

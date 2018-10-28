@@ -125,7 +125,7 @@ the [GPLv3](https://www.gnu.org/licenses/gpl-3.0.en.html): only the snippets in 
 Diego Esteban Alonso Blas, Raúl Raja Martínez and Peter Neyens of 47
 degrees, Rúnar Bjarnason, Tony Morris, John de Goes and Edward Kmett
 for their help explaining the principles of FP. Kenji Yoshida and
-Jason Zaugg for being the main authors of Scalaz, and Paul Chuisano /
+Jason Zaugg for being the main authors of Scalaz, and Paul Chiusano /
 Miles Sabin for fixing a critical bug in the Scala compiler ([SI-2712](https://issues.scala-lang.org/browse/SI-2712)).
 -->
 47 degreesのディエゴ・エステバン・アロンソ・ブラス、ラウール・ラジャ・マルティネス、ピーター・ネイエンズ、および、ルナール・ビャナソン、トニー・モリス、ジョン・ド・ゴーズ、エドワード・クメット各氏らは関数型プログラミングの原則の説明において手助けをしてくれました。
