@@ -860,8 +860,7 @@ the transformers
 the cute bird. Those who do not like symbolic operators can use the alias
 `.into`.
 -->
-`|>`は形が可愛い小鳥に似ているので、*ツグミ演算子*と呼ばれることもあります。
-記号を使った演算子が好みでない方は`.into`というエイリアスを使用するといいでしょう。
+`|>`は形が可愛い小鳥に似ているので、*ツグミ演算子*と呼ばれることもあります。 記号を使った演算子が好みでない方は`.into`というエイリアスを使用するといいでしょう。
 
 <!--
 This approach also works for `Either` (and others) as the inner context, but their lifting methods are more complex and require parameters. Scalaz provides monad transformers for a lot of its own types, so it is worth checking if one is available.
@@ -869,21 +868,32 @@ This approach also works for `Either` (and others) as the inner context, but the
 ここで紹介した手法は`Either`（やその他のコンテキスト）でも有効ですが、外側のコンテキストに持ち上げる方法はより複雑でパラメータが必要になります。
 Scalazは様々な型に対応したモナド変換子を提供しているので、どのようなものが利用できるのかを調べてみると良いでしょう。
 
+<!--
 # Application Design
-
+-->
+# アプリケーション設計
+<!--
 In this chapter we will write the business logic and tests for a purely
 functional server application. The source code for this application is included
 under the `example` directory along with the book's source, however it is
 recommended not to read the source code until the final chapter as there will be
 significant refactors as we learn more about FP.
+-->
+この章では純粋関数を使ったサーバアプリケーションのビジネスロジックとテストの実装を行います。
+このアプリケーションのソースコードは本書の`example`ディレクトリ以下にありますが、関数型プログラミングの学習を進めるで
+相当のリファクタリングを行うので、 最終章までソースコードを読み込まないことをお勧めします。
 
-
+<!--
 ## Specification
+-->
+## 仕様
 
+<!--
 Our application will manage a just-in-time build farm on a shoestring
 budget. It will listen to a [Drone](https://github.com/drone/drone) Continuous Integration server, and
 spawn worker agents using [Google Container Engine](https://cloud.google.com/container-engine/) (GKE) to meet the
 demand of the work queue.
+-->
 
 {width=60%}
 ![](images/architecture.png)
