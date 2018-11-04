@@ -894,47 +894,82 @@ budget. It will listen to a [Drone](https://github.com/drone/drone) Continuous I
 spawn worker agents using [Google Container Engine](https://cloud.google.com/container-engine/) (GKE) to meet the
 demand of the work queue.
 -->
+例として、限られた予算の中でカンバン方式でビルドを行うシステムを取り上げます。
+[Drone](https://github.com/drone/drone)という継続的インテグレーションサーバから要求を受け取り、
+[Google Container Engine](https://cloud.google.com/container-engine/)を使って
+ワーカーキューの需要を満たすためにワーカーエージェントを起動します。
 
 {width=60%}
 ![](images/architecture.png)
 
-Drone receives work when a contributor submits a github pull request
-to a managed project. Drone assigns the work to its agents, each
-processing one job at a time.
+<!--
+Drone receives work when a contributor submits a github pull request to a managed project. Drone assigns the work to its agents, each processing one job at a time.
+-->
+コントリビュータがgithubでプルリクストを送信すると、Droneが仕事を受け取ります。
+Droneはその仕事をエージェントに割り当て、ジョブは1度に1つだけ実行されます。
 
-The goal of our app is to ensure that there are enough agents to
-complete the work, with a cap on the number of agents, whilst
-minimising the total cost. Our app needs to know the number of items
-in the *backlog* and the number of available *agents*.
+<!--
+The goal of our app is to ensure that there are enough agents to complete the work, with a cap on the number of agents, whilst minimising the total cost. Our app needs to know the number of items in the *backlog* and the number of available *agents*.
+-->
+このアプリケーションの目標は、エージェントの数の上限を守って総コストを最小限に抑えながら、仕事を完了させるのに十分なエージェントを割り当てることです。
+このため、アプリケーションは*バックログ*にある仕事の数と利用可能な*エージェント*の数を知る必要があります。
 
+<!--
 Google can spawn *nodes*, each can host multiple drone agents. When an
 agent starts up, it registers itself with drone and drone takes care
 of the lifecycle (including keep-alive calls to detect removed
 agents).
+-->
+Googleでは、複数の*ノード*を派生させることができます。各ノードはそれぞれ複数のDroneエージェントをホストできます。
+エージェントが起動すると、エージェントが自身をDroneに登録し、Droneがそのライフサイクルを監視してくれるようになります。
+（エージェントが取り除かれたことを検知するためのキープアライブを含みます）
 
+<!--
 GKE charges a fee per minute of uptime, rounded up to the nearest hour
 for each node. One does not simply spawn a new node for each job in
 the work queue, we must re-use nodes and retain them until their 58th
 minute to get the most value for money.
+-->
+GKEは分ごとの起動時間で課金します。時間は各ノードの最短時間に切り上げられます。
+ワークキューに各ジョブに対して単純に1つずつ新しいノードを割り当てるのではなく、ノードをできるだけ再利用できるよう、
+58分の起動時間まで保持して支払い金額を節約する必要があります。
 
+<!--
 Our app needs to be able to start and stop nodes, as well as check
 their status (e.g. uptimes, list of inactive nodes) and to know what
 time GKE believes it to be.
+-->
+また、ノードのステータス(起動時間、非アクティブなノードのリストなど)に基づいた起動・停止と
+GKEが認識している起動時間を知ることができる必要があります。
 
+<!--
 In addition, there is no API to talk directly to an *agent* so we do
 not know if any individual agent is performing any work for the drone
 server. If we accidentally stop an agent whilst it is performing work,
 it is inconvenient and requires a human to restart the job.
+-->
+ちなみに、*エージェント*と直接対話できるAPIはないため、個々のエージェントがDroneサーバーで
+どんな仕事をしているかを知ることはできません。仕事中のエージェントを誤って停止した場合、
+不便ですが手動でジョブを再起動する必要があります。
 
+<!--
 Contributors can manually add agents to the farm, so counting agents
 and nodes is not equivalent. We don't need to supply any nodes if
 there are agents available.
+-->
+コードのコントリビュータは手動でエージェントを追加することができるため、エージェントの数と
+ノードの数は等しくありません。使用可能なエージェントがある場合、新たにノードを提供する必要はありません。
 
+<!--
 The failure mode should always be to take the least costly option.
+-->
+障害モードでは、常に最も安いオプションを使用するようにします。
 
+<!--
 Both Drone and GKE have a JSON over REST API with OAuth 2.0
 authentication.
-
+-->
+DroneとGKEの両方にOAuth 2.0認証を使ったJSONベースのREST APIがあります。
 
 ## Interfaces / Algebras
 
