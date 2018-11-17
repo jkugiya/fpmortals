@@ -971,12 +971,14 @@ authentication.
 -->
 DroneとGKEの両方にOAuth 2.0認証を使ったJSONベースのREST APIがあります。
 
+<!--
 ## Interfaces / Algebras
-
-We will now codify the architecture diagram from the previous section. Firstly,
-we need to define a simple data type to capture a millisecond timestamp because
-such a simple thing does not exist in either the Java or Scala standard
-libraries:
+-->
+## インターフェースと代数
+<!--
+We will now codify the architecture diagram from the previous section. Firstly, we need to define a simple data type to capture a millisecond timestamp because such a simple thing does not exist in either the Java or Scala standard libraries:
+-->
+前節のアーキテクチャ図をコードにしていきましょう。まず、ミリ秒のタイムスタンプを単純なデータ型として定義します。これは、JavaやScalaの標準ライブラリにはこのような単純なデータ型がないためです。
 
 {lang="text"}
 ~~~~~~~~
@@ -987,13 +989,19 @@ libraries:
     def -(e: Epoch): FiniteDuration = (millis - e.millis).millis
   }
 ~~~~~~~~
-
+<!--
 In FP, an *algebra* takes the place of an `interface` in Java, or the
 set of valid messages for an `Actor` in Akka. This is the layer where
 we define all side-effecting interactions of our system.
+-->
+関数型プログラミングにおいては、*代数*という概念がJavaにおける`interface`やAkkaにおける`Actor`に相当します。
+代数には、副作用を伴うシステムとの対話を全て定義します。
 
+<!--
 There is tight iteration between writing the business logic and the
 algebra: it is a good level of abstraction to design a system.
+-->
+代数はビジネスロジックと緊密な対話を行います。これによってシステムの適度な抽象度でシステムを設計できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1011,24 +1019,36 @@ algebra: it is a good level of abstraction to design a system.
     def stop(node: MachineNode): F[MachineNode]
   }
 ~~~~~~~~
-
+<!--
 We've used `NonEmptyList`, easily created by calling `.toNel` on the
 stdlib's `List` (returning an `Option[NonEmptyList]`), otherwise
 everything should be familiar.
+-->
+見慣れない`NonEmptyList`という型が出てきました。この型は標準ライブラリの`List`などから`toNel`という関数の呼び出しによって生成できます。
 
+<!--
 A> It is good practice in FP to encode constraints in parameters **and** return types
 A> --- it means we never need to handle situations that are impossible. However,
 A> this often conflicts with *Postel's law* "be liberal in what you accept from
-A> others".
+A> others**.
+-->
+A> 関数型プログラミングにおいて、パラメータの制約**と**戻り値を抽象化するのは良い習慣です。
+A> これによって不可能な状況を処理する必要がなくなるからです。しかし、これは"受信するものに対しては寛容に"という*ポステルの法則*には反します。
 A> 
-A> Although we agree that parameters should be as general as possible, we do not
-A> agree that a function should take `Seq` unless it can handle empty `Seq`,
-A> otherwise the only course of action would be to exception, breaking totality and
-A> causing a side effect.
+<!--
+Although we agree that parameters should be as general as possible, we do not agree that a function should take `Seq` unless it can handle empty `Seq`, otherwise the only course of action would be to exception, breaking totality and causing a side effect.
+-->
+A> パラメータができるだけ一般的であるべき、という話は問題ないでしょう。しかし、関数が空の`Seq`を処理できないにもかかわらず`Seq`という型を
+A> 取ってよいかという話には議論の余地があります。関数が処理できないパラメータを受け取ると、例外を必要とする原因になってしまいます。
+A> 例外は完全性の喪失や副作用の原因ともなります。
 A> 
+<!--
 A> We prefer `NonEmptyList`, not because it is a `List`, but because of its
 A> non-empty property. When we learn about Scalaz's typeclass hierarchy, we will
 A> see a better way to request non-emptyness.
+-->
+A> ここでは`List`ではあるものの空ではないという特性を表現する手段として`NonEmptyList`を用いることにします。
+A> Scalazの型階層を学んでいくと、これが空ではないという要求に応えるよい方法であることがわかるでしょう。
 
 
 ## Business Logic
