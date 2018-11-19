@@ -1050,18 +1050,32 @@ A> see a better way to request non-emptyness.
 A> ここでは`List`ではあるものの空ではないという特性を表現する手段として`NonEmptyList`を用いることにします。
 A> Scalazの型階層を学んでいくと、これが空ではないという要求に応えるよい方法であることがわかるでしょう。
 
-
+<!--
 ## Business Logic
+-->
+## ビジネスロジック
 
+<!--
 Now we write the business logic that defines the application's
 behaviour, considering only the happy path.
+-->
+では、まずアプリケーションの振る舞いを定義するビジネスロジックを実装していきましょう。
+ここでは正常経路のみを考慮します。
 
+<!--
 We need a `WorldView` class to hold a snapshot of our knowledge of the
 world. If we were designing this application in Akka, `WorldView`
 would probably be a `var` in a stateful `Actor`.
+-->
+世界の知識のスナップショットを保持する`WorldView`というクラスが必要です。
+Akkaでアプリケーションを設計するなら、`WorldView`は`Actor`が保持する`var`になるでしょう。
 
+<!--
 `WorldView` aggregates the return values of all the methods in the
 algebras, and adds a *pending* field to track unfulfilled requests.
+-->
+`WorldView`は代数の中の全てのメソッドの戻り値を集計し、まだ満たされていない要求を`pending`という
+フィールドで保持します。
 
 {lang="text"}
 ~~~~~~~~
@@ -1075,10 +1089,16 @@ algebras, and adds a *pending* field to track unfulfilled requests.
   )
 ~~~~~~~~
 
+<!--
 Now we are ready to write our business logic, but we need to indicate
 that we depend on `Drone` and `Machines`.
+-->
+これでビジネスロジックを記述する準備ができましたが、`Drone`や`Machines`に依存していることを示しておく必要があります。
 
+<!--
 We can write the interface for the business logic
+-->
+ビジネスロジックのインターフェースは以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -1088,26 +1108,41 @@ We can write the interface for the business logic
     def act(world: WorldView): F[WorldView]
   }
 ~~~~~~~~
-
+<!--
 and implement it with a *module*. A module depends only on other modules,
 algebras and pure functions, and can be abstracted over `F`. If an
 implementation of an algebraic interface is tied to a specific type, e.g. `IO`,
 it is called an *interpreter*.
+-->
+次に*モジュール*を実装します。モジュールが依存するのは他のモジュールや代数、純粋関数のみです。
+`F`という型コンストラクタがモジュールを抽象化します。代数のインターフェースが特定の型に限定される場合、
+それを*インタープリタ*と呼びます。
 
 {lang="text"}
 ~~~~~~~~
   final class DynAgentsModule[F[_]: Monad](D: Drone[F], M: Machines[F])
     extends DynAgents[F] {
 ~~~~~~~~
-
+<!--
 The `Monad` context bound means that `F` is *monadic*, allowing us to use `map`,
 `pure` and, of course, `flatMap` via `for` comprehensions.
+-->
+`F`は`Monad`にコンテキストバインドされているので、*モナディック*です。つまり、`for`内包表記の中で
+`map`や`pure`、`flatMap`といったおなじみの関数を利用できます。
 
+<!--
 We have access to the algebra of `Drone` and `Machines` as `D` and `M`,
 respectively. Using a single capital letter name is a common naming convention
 for monad and algebra implementations.
+-->
+`Drone`や`Machines`の代数にはそれぞれ`D`、`M`といった名前を与えます。
+大文字1つの変数名を使用するのは、モナドや代数の実装に対する一般的な命名規約です。
 
+<!--
 Our business logic will run in an infinite loop (pseudocode)
+-->
+実装するビジネスロジックは無限ループの中で実行します。
+以下はその擬似コードです。
 
 {lang="text"}
 ~~~~~~~~
@@ -1117,11 +1152,16 @@ Our business logic will run in an infinite loop (pseudocode)
     state = act(state)
 ~~~~~~~~
 
-
+<!--
 ### initial
-
+-->
+### 初期化(initial)
+<!--
 In `initial` we call all external services and aggregate their results
 into a `WorldView`. We default the `pending` field to an empty `Map`.
+-->
+`initial`の中で外部サービスを呼び出し、集計結果を`WorldView`にまとめます。
+`pending`フィールドはデフォルトで空の`Map`にしておきます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1133,7 +1173,7 @@ into a `WorldView`. We default the `pending` field to an empty `Map`.
     mt <- M.getTime
   } yield WorldView(db, da, mm, ma, Map.empty, mt)
 ~~~~~~~~
-
+<!--
 Recall from Chapter 1 that `flatMap` (i.e. when we use the `<-`
 generator) allows us to operate on a value that is computed at
 runtime. When we return an `F[_]` we are returning another program to
@@ -1141,16 +1181,30 @@ be interpreted at runtime, that we can then `flatMap`. This is how we
 safely chain together sequential side-effecting code, whilst being
 able to provide a pure implementation for tests. FP could be described
 as Extreme Mocking.
+-->
+第1章のおさらいですが、`flatMap`（`<-`というジェネレータの呼び出しです）を使うことによって実行時に計算された値を操作できます。
+関数が`F[_]`を返すということは、実行時に解釈される別のプログラムを戻り値として返しているということです。
+`F[_]`に対しては`flatMap`を使うことができます。
+このようにすることで、副作用のあるコードを逐次的に組み合わせることができるのと同時に、テスト時には純粋な実装を利用することができます。
+関数型プログラミングとはエキストリーム・モックだ、と言うこともできるでしょう。
 
-
+<!--
 ### update
-
+-->
+### 更新(update)
+<!--
 `update` should call `initial` to refresh our world view, preserving
 known `pending` actions.
+-->
+`update`は、`initial`を呼び出して最新のワールドビューを取得し、`pending`になっている操作を反映します。
 
+<!--
 If a node has changed state, we remove it from `pending` and if a
 pending action is taking longer than 10 minutes to do anything, we
 assume that it failed and forget that we asked to do it.
+-->
+ノードの状態が変化している場合、`pending`から不要になったものを取り除き、さらに保留中の操作が10分間何も行われなかった場合は、
+失敗したか指示が失われたとみなすことにします。
 
 {lang="text"}
 ~~~~~~~~
@@ -1166,12 +1220,15 @@ assume that it failed and forget that we asked to do it.
   private def symdiff[T](a: Set[T], b: Set[T]): Set[T] =
     (a union b) -- (a intersect b)
 ~~~~~~~~
-
+<!--
 Concrete functions like `.symdiff` don't need test interpreters, they have
 explicit inputs and outputs, so we could move all pure code into standalone
 methods on a stateless `object`, testable in isolation. We're happy testing only
 the public methods, preferring that our business logic is easy to read.
-
+-->
+`.symdiff`のように具体的な実装を持つ関数はテストのためのインタープリタを必要としません。
+このような関数は明示的な入力と出力があるため、純粋なコードを状態を持たない`object`の単独実行可能なメソッドに移動して、別々にテストできるように
+することができます。そのようにすることで、公開メソッドのみをテストすることができますし、ビジネスロジックの可読性も良くなるでしょう。
 
 ### act
 

@@ -30,3 +30,5 @@
 | Incomprehensible | 不可知性 | For Comprehensions / Incomprehensible | コンテキスト（`Option`や`Future`といった入れ物の型）が同じでモナディックなものを`comprehensive`、モナディックだがコンテキストが異なるものを`incomprehensive`と言っている。`incomprehensibility`の訳語は「不可知性」であるものの、プログラミングの記事でこの訳語を使用しているものは見つけられなかったが、この訳語を使用した。 |
 | monad transformer | モナド変換子 | For Comprehensions / Incomprehensible | - |
 | thrush operator | ツグミ演算子 | For Comprehensions / Incomprehensible | 記号メソッドの呼び方はまちまちだと思われるが、`thrush`（ツグミ）の訳に忠実にした。 |
+| happy path | 正常経路 | Application Design / Business Logic | - |
+| Extreame Mockiing | エクストリーム・モック | Application Design / Business Logic / initial | - |
