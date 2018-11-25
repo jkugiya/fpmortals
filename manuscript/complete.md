@@ -1155,7 +1155,7 @@ Our business logic will run in an infinite loop (pseudocode)
 <!--
 ### initial
 -->
-### 初期化(initial)
+### 初期化（initial）
 <!--
 In `initial` we call all external services and aggregate their results
 into a `WorldView`. We default the `pending` field to an empty `Map`.
@@ -1191,7 +1191,7 @@ as Extreme Mocking.
 <!--
 ### update
 -->
-### 更新(update)
+### 更新（update）
 <!--
 `update` should call `initial` to refresh our world view, preserving
 known `pending` actions.
@@ -1230,22 +1230,37 @@ the public methods, preferring that our business logic is easy to read.
 このような関数は明示的な入力と出力があるため、純粋なコードを状態を持たない`object`の単独実行可能なメソッドに移動して、別々にテストできるように
 することができます。そのようにすることで、公開メソッドのみをテストすることができますし、ビジネスロジックの可読性も良くなるでしょう。
 
+<!--
 ### act
-
+-->
+### 操作（act）
+<!--
 The `act` method is slightly more complex, so we will split it into two
 parts for clarity: detection of when an action needs to be taken,
 followed by taking action. This simplification means that we can only
 perform one action per invocation, but that is reasonable because we
 can control the invocations and may choose to re-run `act` until no
 further action is taken.
+-->
+`act`メソッドはこれまでのものよりやや複雑です。理解しやすいように、何らかの操作が必要になったときにそれを検知する部分と、
+実際にその操作を実行する部分の2つに分けて考えるようにします。1つの呼び出しに対して1つの操作しか行われないことに
+なりますが、呼び出しを制御し、必要がなくなるまで`act`を再実行できるようになるという点でこの単純化は妥当です。
 
+<!--
 We write the scenario detectors as extractors for `WorldView`, which
 is nothing more than an expressive way of writing `if` / `else`
 conditions.
+-->
+まず、`WorldView`から値を取り出して、どのような条件で動作しているのかをわかるようにします。
+これは、`if`や`else`を使った方法よりも表現力があります。
 
+<!--
 We need to add agents to the farm if there is a backlog of work, we
 have no agents, we have no nodes alive, and there are no pending
 actions. We return a candidate node that we would like to start:
+-->
+バックログがあり、エージェントと生存ノード、保留中の操作がない場合、エージェントを追加する必要があります。
+エージェントを起動するノードの候補を返すようにします。
 
 {lang="text"}
 ~~~~~~~~
@@ -1258,14 +1273,21 @@ actions. We return a candidate node that we would like to start:
     }
   }
 ~~~~~~~~
-
+<!--
 If there is no backlog, we should stop all nodes that have become stale (they
 are not doing any work). However, since Google charge per hour we only shut down
 machines in their 58th minute to get the most out of our money. We return the
 non-empty list of nodes to stop.
+-->
+バックログがない場合、失効（もう仕事をしていないということです。）したすべてのノードを停止する必要があります。
+しかし、Googleが課金するのは1時間ごとなので、稼働時間が58分以上のマシンのみを停止することでお金を最大限に利用できます。
+停止するノードは`NonEmptyList`で返すようにします。
 
+<!--
 As a financial safety net, all nodes should have a maximum lifetime of
 5 hours.
+-->
+財務上のセーフティネットとして、すべてのノードの最大有効時間は5時間とします。
 
 {lang="text"}
 ~~~~~~~~
@@ -1281,10 +1303,13 @@ As a financial safety net, all nodes should have a maximum lifetime of
     }
   }
 ~~~~~~~~
-
+<!--
 Now that we have detected the scenarios that can occur, we can write
 the `act` method. When we schedule a node to be started or stopped, we
 add it to `pending` noting the time that we scheduled the action.
+-->
+発生しうるシナリオを検知できるようになったので、`act`メソッドを実装しましょう。
+ノードの開始または停止をスケジュールすると、操作をスケジュールした時間を考慮した上で`pending`に追加します。
 
 {lang="text"}
 ~~~~~~~~
@@ -1306,16 +1331,23 @@ add it to `pending` noting the time that we scheduled the action.
     case _ => world.pure[F]
   }
 ~~~~~~~~
-
+<!--
 Because `NeedsAgent` and `Stale` do not cover all possible situations,
 we need a catch-all `case _` to do nothing. Recall from Chapter 2 that
 `.pure` creates the `for`'s (monadic) context from a value.
+-->
+`NeedsAgent`と`Stale`のみでは起こりうるすべての状況をすべて網羅はできないので、それらを補足して何も行わないようにするために`case _`を使います。
+第2章のおさらいですが、`pure`はただの値から`for`の（モナディックな）コンテキストを生成します。
 
+<!--
 `foldLeftM` is like `foldLeft`, but each iteration of the fold may return a
 monadic value. In our case, each iteration of the fold returns `F[WorldView]`.
 The `M` is for Monadic. We will find more of these *lifted* methods that behave
 as one would expect, taking monadic values in place of values.
-
+-->
+`foldLeftM`は`foldLeft`と似ていますが、折り畳みの各繰り返し操作の中でモナディックな値を返します。
+今回の場合、折りたたみの各繰り返し操作は`F[WorldView]`を返します。`M`はモナディックな操作です。
+値ではなくモナディックな値を取って、内包表記の中で期待通りの振る舞いをする*持ち上げられた（lifted）*メソッドはこれからもたくさん出てきます。
 
 ## Unit Tests
 
