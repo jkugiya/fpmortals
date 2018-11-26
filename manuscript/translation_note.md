@@ -32,3 +32,4 @@
 | thrush operator | ツグミ演算子 | For Comprehensions / Incomprehensible | 記号メソッドの呼び方はまちまちだと思われるが、`thrush`（ツグミ）の訳に忠実にした。 |
 | happy path | 正常経路 | Application Design / Business Logic | - |
 | Extreame Mockiing | エクストリーム・モック | Application Design / Business Logic / initial | - |
+| dependency algebra | 依存代数 | Application Design / Unit test | - |

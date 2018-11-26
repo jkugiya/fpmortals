@@ -1349,20 +1349,32 @@ as one would expect, taking monadic values in place of values.
 今回の場合、折りたたみの各繰り返し操作は`F[WorldView]`を返します。`M`はモナディックな操作です。
 値ではなくモナディックな値を取って、内包表記の中で期待通りの振る舞いをする*持ち上げられた（lifted）*メソッドはこれからもたくさん出てきます。
 
+<!--
 ## Unit Tests
+-->
+## 単体テスト
+<!--
+The FP approach to writing applications is a designer's dream: delegate writing the implementations of algebras to team members while focusing on making business logic meet the requirements.
+-->
+設計者にとって関数型プログラミングの手法を使ってアプリケーションを書くということはまさに理想です。
+ビジネスロジックを要件に適合させることに注力し、チームメンバーに代数の実装を記述することを任せられます。
 
-The FP approach to writing applications is a designer's dream: delegate writing
-the implementations of algebras to team members while focusing on making
-business logic meet the requirements.
-
+<!--
 Our application is highly dependent on timing and third party webservices. If
 this was a traditional OOP application, we'd create mocks for all the method
 calls, or test actors for the outgoing mailboxes. FP mocking is equivalent to
 providing an alternative implementation of dependency algebras. The algebras
 already isolate the parts of the system that need to be *mocked*, i.e.
 interpreted differently in the unit tests.
+-->
+アプリケーションはタイミングやサードパーティ製のWEBサービスに強く依存するものです。
+伝統的なオブジェクト指向プログラミングの場合、すべてのメソッド呼び出しに対してモックを作ったり、アクターが発信したメッセージをテストする必要があります。
+関数型プログラミングでは、依存代数の代替実装を提供することがモックの代わりになります。
 
+<!--
 We will start with some test data
+-->
+例えば、まず以下のようにいくつかテストデータを用意します。
 
 {lang="text"}
 ~~~~~~~~
