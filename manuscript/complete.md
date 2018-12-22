@@ -1556,36 +1556,57 @@ these business rules. Everything else is implementation detail.
 アプリケーションの開発者が顧客とやりとりする時間の90%はビジネスルールの改良や更新・修正を行うために費やされます。
 実装の詳細はその残りの部分に過ぎません。 このため、ビジネスロジックに対するテストを単純に実装できることは、生産性を飛躍的に向上させます。
 
+<!--
 ## Parallel
+-->
+## 並列化
 
+<!--
 The application that we have designed runs each of its algebraic
 methods sequentially. But there are some obvious places where work can
 be performed in parallel.
+-->
+ここまで設計してきたアプリケーションは代数化されたメソッドを逐次実行していました。
+しかし、明らかにプログラムで行っていることを並列化できる箇所がいくつかあります。
 
-
+<!--
 ### initial
-
+-->
+### 初期化（initial）
+<!--
 In our definition of `initial` we could ask for all the information we
 need at the same time instead of one query at a time.
+-->
+`initial`では1つずつ順番にクエリを実行するのではなく、必要なすべての情報を一度に取得することもできるでしょう。
 
+<!--
 As opposed to `flatMap` for sequential operations, Scalaz uses
 `Apply` syntax for parallel operations:
+-->
+`flatMap`は逐次実行を行いますが、Scalazの`Apply`という構文を用いると並列演算を表現できます。
 
 {lang="text"}
 ~~~~~~~~
   ^^^^(D.getBacklog, D.getAgents, M.getManaged, M.getAlive, M.getTime)
 ~~~~~~~~
 
+<!--
 which can also use infix notation:
+-->
+これは以下のように中置記法にすることもできます。
 
 {lang="text"}
 ~~~~~~~~
   (D.getBacklog |@| D.getAgents |@| M.getManaged |@| M.getAlive |@| M.getTime)
 ~~~~~~~~
 
+<!--
 If each of the parallel operations returns a value in the same monadic
 context, we can apply a function to the results when they all return.
 Rewriting `initial` to take advantage of this:
+-->
+各並列演算は同じモナドのコンテキストで値を返します。全ての演算が値を返してから、それらの結果を使って関数を適用できます。
+この利点を活用できるように`initial`を書換えてみましょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -1595,24 +1616,39 @@ Rewriting `initial` to take advantage of this:
     }
 ~~~~~~~~
 
-
+<!--
 ### act
+-->
 
+### 操作（act）
+<!--
 In the current logic for `act`, we are stopping each node
 sequentially, waiting for the result, and then proceeding. But we
 could stop all the nodes in parallel and then update our view of the
 world.
+-->
+`act`の現在の実装は、各ノードを逐次的に停止するため、ある結果が返ってくるのを待ってから次の処理を行います。
+しかし、全てのノードを並列に停止して、それをビューに反映することもできるでしょう。
 
+<!--
 A disadvantage of doing it this way is that any failures will cause us
 to short-circuit before updating the `pending` field. But that is a
 reasonable tradeoff since our `update` will gracefully handle the case
 where a `node` is shut down unexpectedly.
+-->
+このようにすると、いずれかのノードが失敗すると`pending`を全く更新せずに処理が失敗してしまうという欠点があります。
+しかし、`update`を`node`が予期できない形で停止した場合に適切に処理を行うようにすることもできるので、これは合理的なトレードオフです。
 
+<!--
 We need a method that operates on `NonEmptyList` that allows us to
 `map` each element into an `F[MachineNode]`, returning an
 `F[NonEmptyList[MachineNode]]`. The method is called `traverse`, and
 when we `flatMap` over it we get a `NonEmptyList[MachineNode]` that we
 can deal with in a simple way:
+-->
+ここで、`NonEmptyList`で与えられるノードの各要素に対して`map`の操作を行い`F[MachineNode]`に変換し、
+最終的に`F[NonEmptyList[MachineNode]]`を得るために`traverse`というメソッドを使用します。
+この結果に対して`flatMap`することで、簡単に処理することができる`NonEmptyList[MachineNode]`を得ることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1622,18 +1658,26 @@ can deal with in a simple way:
     update = world.copy(pending = world.pending ++ updates)
   } yield update
 ~~~~~~~~
-
+<!--
 Arguably, this is easier to understand than the sequential version.
+-->
+おそらく、こちらの方が逐次処理のバージョンよりも理解しやすいでしょう。
 
-
+<!--
 ## Summary
-
+-->
+## まとめ
+<!--
 1.  *algebras* define the interface between systems.
 2.  *modules* are implementations of an algebra in terms of other algebras.
 3.  *interpreters* are concrete implementations of an algebra for a fixed `F[_]`.
 4.  Test interpreters can replace the side-effecting parts of the system,
     giving a high amount of test coverage.
-
+-->
+1. *代数*はシステム間のインターフェースを定義します。
+2. *モジュール*は他の代数を使った代数の実装です。
+3. *インタープリタ*はある固定の`F[_]`を使った代数の具体的な実装です。
+4. テスト用のインタープリタを用いることで、システムが副作用を及ぼす部分を置き換えて、高いテストカバレッジを得ることができます。
 
 # Data and Functionality
 
