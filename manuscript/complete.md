@@ -1392,10 +1392,12 @@ We will start with some test data
   }
   import Data._
 ~~~~~~~~
-
+<!--
 A> The `epoch` string interpolator is written with Jon Pretty's [contextual](https://github.com/propensive/contextual) library,
 A> giving us compiletime safety around string constructors of a type:
-A> 
+-->
+A> `epoch`という補間子は[ジョン・プリティ](https://github.com/propensive/contextual)が書いたライブラリのものです。
+A> このような補間子を使うと、生成時に文字列を受け取る型の安全性をコンパイル時に保証できます。
 A> {lang="text"}
 A> ~~~~~~~~
 A>   import java.time.Instant
@@ -1409,12 +1411,20 @@ A>     val epoch = Prefix(EpochInterpolator, sc)
 A>   }
 A> ~~~~~~~~
 
+<!--
 We implement algebras by extending `Drone` and `Machines` with a specific
 monadic context, `Id` being the simplest.
+-->
+`Drone`や`Machines`に特定のモナドのコンテキストを与えて代数を実装してみましょう。
+`Id`の代数が最も簡単です。
 
+<!--
 Our "mock" implementations simply play back a fixed `WorldView`. We've
 isolated the state of our system, so we can use `var` to store the
 state:
+-->
+次のモック実装では、コンストラクタで与えられた`WorldView`を常に使用します。
+状態をシステムから切り離しているので、`var`を使って状態を保存することができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1437,18 +1447,31 @@ state:
     val program = new DynAgentsModule[Id](D, M)
   }
 ~~~~~~~~
-
+<!--
 A> We will return to this code later on and replace `var` with something safer.
+-->
+A> このコードは後で振り返って、`var`を使用している部分をより安全な方法で置き換えます。
 
+<!--
 When we write a unit test (here using `FlatSpec` from Scalatest), we create an
 instance of `Mutable` and then import all of its members.
+-->
+単体テストを実装するときは（ここではScalatestの`FlatSpec`を使用します。）、`Mutable`のインスタンスを生成し、
+そのすべてのメンバーをインポートします。
 
+<!--
 Our implicit `drone` and `machines` both use the `Id` execution
 context and therefore interpreting this program with them returns an
 `Id[WorldView]` that we can assert on.
+-->
+`program`に与えられた`drone`と`machines`には共に実行コンテキストとして`Id`を与えているので、
+このプログラムは`Id[WorldView]`を返します。これを使って検証を行うことができます。
 
+<!--
 In this trivial case we just check that the `initial` method returns
 the same value that we use in the static implementations:
+-->
+以下の小さなテストコードでは、`initial`メソッドから上記の静的な実装でコンストラクタに与えた値と同じ値が得られることを確認しています。
 
 {lang="text"}
 ~~~~~~~~
@@ -1460,8 +1483,11 @@ the same value that we use in the static implementations:
   }
 ~~~~~~~~
 
+<!--
 We can create more advanced tests of the `update` and `act` methods,
 helping us flush out bugs and refine the requirements:
+-->
+`update`と`act`については、バグを洗い流し、要件を洗練する手助けになる、より進んだテストを実装できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1490,7 +1516,7 @@ helping us flush out bugs and refine the requirements:
     mutable.started shouldBe 1
   }
 ~~~~~~~~
-
+<!--
 It would be boring to go through the full test suite. The following tests are
 easy to implement using the same approach:
 
@@ -1501,17 +1527,34 @@ easy to implement using the same approach:
 -   shut down agents when there is no backlog if they are too old
 -   shut down agents, even if they are potentially doing work, if they are too old
 -   ignore unresponsive pending actions during update
+-->
+すべてのテストを実装するのは退屈な作業かもしれませんが、同じようなアプローチで以下の仕様をテストをすることができます。
 
+- 保留中の場合、エージェントを要求しない
+- ノードが閾値よりも新しい場合はエージェントを停止しない
+- バックログがなく、そろそろ新しいコストがかかる場合はエージェントを停止する
+- 保留中の操作がある場合はエージェントを停止しない
+- バックログがなく、エージェントが閾値よりも古い場合は停止する
+- 仕事を実行中の可能性があっても、閾値よりも古いエージェントは停止する
+- 更新中に応答を返さない保留中の操作を無視する
+
+<!--
 All of these tests are synchronous and isolated to the test runner's
 thread (which could be running tests in parallel). If we'd designed
 our test suite in Akka, our tests would be subject to arbitrary
 timeouts and failures would be hidden in logfiles.
+-->
+これらのテストはいずれも同期的でテストランナーのスレッドは隔離できます。（つまり、テストを並列に実行できます。）
+Akkaでテストスイートを設計する場合、テストはタイムアウトの影響を受け、その失敗はログを見なければわかりません。
 
+<!--
 The productivity boost of simple tests for business logic cannot be
 overstated. Consider that 90% of an application developer's time
 interacting with the customer is in refining, updating and fixing
 these business rules. Everything else is implementation detail.
-
+-->
+アプリケーションの開発者が顧客とやりとりする時間の90%はビジネスルールの改良や更新・修正を行うために費やされます。
+実装の詳細はその残りの部分に過ぎません。 このため、ビジネスロジックに対するテストを単純に実装できることは、生産性を飛躍的に向上させます。
 
 ## Parallel
 
