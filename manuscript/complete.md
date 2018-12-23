@@ -1679,8 +1679,11 @@ Arguably, this is easier to understand than the sequential version.
 3. *インタープリタ*はある固定の`F[_]`を使った代数の具体的な実装です。
 4. テスト用のインタープリタを用いることで、システムが副作用を及ぼす部分を置き換えて、高いテストカバレッジを得ることができます。
 
+<!--
 # Data and Functionality
-
+-->
+# データと機能
+<!--
 From OOP we are used to thinking about data and functionality
 together: class hierarchies carry methods, and traits can demand that
 data fields exist. Runtime polymorphism of an object is in terms of
@@ -1689,38 +1692,80 @@ interfaces. This can get messy as a codebase grows. Simple data types
 become obscured by hundreds of lines of methods, trait mixins suffer
 from initialisation order errors, and testing / mocking of highly
 coupled components becomes a chore.
+-->
+オブジェクト指向プログラミングを使ってきたので、私達はデータと機能を一緒に考えることに慣れています。
+クラスの階層によってメソッドを共通化し、トレイトを使うことでフィールドが存在することを強制できます。
+実行時の多態性は「is a」の関係性であり、クラスが共通のインターフェースを継承していることを要求します。
+しかし、これはコードベースが大きくなると面倒なことがあります。何百行ものメソッドによって単純なデータ型の
+役割が曖昧になり、幾つものトレイトのミックスインは順番によってはエラーを起こしてしまいます。また、結合度の高い
+コンポーネントのテストやモックアップも面倒です。
 
+<!--
 FP takes a different approach, defining data and functionality
 separately. In this chapter, we will cover the basics of data types
 and the advantages of constraining ourselves to a subset of the Scala
 language. We will also discover *typeclasses* as a way to achieve
 compiletime polymorphism: thinking about functionality of a data
 structure in terms of "has a" rather than "is a" relationships.
+-->
+関数型プログラミングはこれとは異なり、データと機能は別々に定義します。
+この章では、データ型の基本とScalaという言語の中の制約に縛られることの利点について述べます。
+また、コンパイル時の多態性を実現する手法として、*型クラス*の紹介もします。
+型クラスを使う場合、あるデータの機能は「is a」の関係よりも「has a」の関係を利用して考えます。
 
-
+<!--
 ## Data
+-->
+## データ
 
+<!--
 The fundamental building blocks of data types are
+-->
+基本的なデータ型の構成は次のとおりです。
 
+<!--
 -   `final case class` also known as *products*
 -   `sealed abstract class` also known as *coproducts*
 -   `case object` and `Int`, `Double`, `String` (etc) *values*
+-->
+- `final case class`は*積（products）*であると考えることができます。
+- `sealed abstract class`は*余積（coproducts）*であると考えることができます。
+- `case object`や`Int`、`Double`、`String`といったものは*値（values）*です。
 
+<!--
 with no methods or fields other than the constructor parameters. We prefer
 `abstract class` to `trait` in order to get better binary compatibility and to
 discourage trait mixing.
+-->
+メソッドがない場合やコンストラクタパラメータ以外のフィールドがない場合、*トレイト*よりも*抽象クラス*を使うほうがバイナリ互換性を保ちやすいので、
+できるだけトレイトのミックスインよりも抽象クラスを使うようにします。
 
+<!--
 The collective name for *products*, *coproducts* and *values* is
 *Algebraic Data Type* (ADT).
+-->
+*積*、*余積*、*値*といったものの総称を*抽象データ型（ADT）*といいます。
 
+<!--
 We compose data types from the `AND` and `XOR` (exclusive `OR`)
 Boolean algebra: a product contains every type that it is composed of,
 but a coproduct can be only one. For example
+-->
+データ型は`AND`や`XOR`（`OR`の反対）といったブール代数から構成されます。
+例えば積はそれを構成する全ての型を含んでいますが、余積はいずれか1つの型しか含みません。
+これは以下のように表現できます。
 
+<!--
 -   product: `ABC = a AND b AND c`
 -   coproduct: `XYZ = x XOR y XOR z`
+-->
+-   積: `ABC = a AND b AND c`
+-   余積: `XYZ = x XOR y XOR z`
 
+<!--
 written in Scala
+-->
+Scalaで表現すると、以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -1739,13 +1784,21 @@ written in Scala
   final case class Z(b: B) extends XYZ
 ~~~~~~~~
 
-
+<!--
 ### Recursive ADTs
-
+-->
+### 再帰抽象データ型
+<!--
 When an ADT refers to itself, we call it a *Recursive Algebraic Data Type*.
+-->
 
+ある抽象データ型が自身の型を参照する場合、これを*再帰抽象データ型*といいます。
+
+<!--
 `scalaz.IList`, a safe alternative to the stdlib `List`, is recursive because
 `ICons` contains a reference to `IList`.:
+-->
+`scalaz.IList`は標準ライブラリの`List`の安全な代替となる型ですが、`ICon`が`IList`を参照するフィールドを持っているので再帰していると言えます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1753,41 +1806,65 @@ When an ADT refers to itself, we call it a *Recursive Algebraic Data Type*.
   final case class INil[A]() extends IList[A]
   final case class ICons[A](head: A, tail: IList[A]) extends IList[A]
 ~~~~~~~~
-
-
+<!--
 ### Functions on ADTs
+-->
 
+### 抽象データ型の関数
+<!--
 ADTs can contain *pure functions*
+-->
+抽象データ型は*純粋関数*を持つことができます。
 
 {lang="text"}
 ~~~~~~~~
   final case class UserConfiguration(accepts: Int => Boolean)
 ~~~~~~~~
 
+<!--
 But ADTs that contain functions come with some caveats as they don't
 translate perfectly onto the JVM. For example, legacy `Serializable`,
 `hashCode`, `equals` and `toString` do not behave as one might
 reasonably expect.
+-->
+しかし、関数はJVM上に完全な形に変換されないので、抽象データ型に持たせる場合には注意が必要です。
+従来の`Serializable`や`hashCode`、`equals`、`toString`などは期待される望ましい振る舞いをしません。
 
+<!--
 Unfortunately, `Serializable` is used by popular frameworks, despite
 far superior alternatives. A common pitfall is forgetting that
 `Serializable` may attempt to serialise the entire closure of a
 function, which can crash production servers. A similar caveat applies
 to legacy Java classes such as `Throwable`, which can carry references
 to arbitrary objects.
+-->
+残念ながら`Serializable`は、それよりはるかに優れた代替手段があるにもかかわらず、一般的なフレームワークでも使用されています。
+よくある落とし穴は、`Serializable`が関数のクロージャー全体を直列化しようとするのを見落とすことです。
+これがプロダクションサーバーのクラッシュにつながることもあります。
+`Throwable`のような従来のJavaのクラスも任意のオブジェクトの参照を保持できるので、同じような注意が必要です。
 
+<!--
 We will explore alternatives to the legacy methods when we discuss the
 Scalaz library in the next chapter, at the cost of losing
 interoperability with some legacy Java and Scala code.
+-->
+従来のJavaプログラムとScalaのコードとの相互運用性は犠牲になりますが、次章でScalazのライブラリに関する議論をする時に、
+これらの従来の手法の代替手法を紹介します。
 
-
+<!--
 ### Exhaustivity
-
+-->
+### 網羅性（Exhaustivity）
+<!--
 It is important that we use `sealed abstract class`, not just
 `abstract class`, when defining a data type. Sealing a `class` means
 that all subtypes must be defined in the same file, allowing the
 compiler to know about them in pattern match exhaustivity checks and
 in macros that eliminate boilerplate. e.g.
+-->
+データ型を定義する時に、単に`abstract class`という宣言をするのではなく、`sealed abstract class`という宣言をすることは重要です。
+`sealed`（印をつける）というのは、そのクラスの全てのサブクラスが同一ファイル中に定義されているということであり、
+コンパイラがパターンマッチを使って網羅性のチェックを行ったり、マクロを使ってボイラープレートを減らしたりすることを可能にします。
 
 {lang="text"}
 ~~~~~~~~
@@ -1804,12 +1881,21 @@ in macros that eliminate boilerplate. e.g.
                                ^
 ~~~~~~~~
 
+<!--
 This shows the developer what they have broken when they add a new
 product to the codebase. We're using `-Xfatal-warnings`, otherwise
 this is just a warning.
+-->
+このコードは開発者が新しいコードを追加した時に網羅性の不足によって失敗する例です。
+`-Xfatal-warnings`というコンパイルオプションを使用すると、このようにコンパイル時のエラーになりますが、
+オプションを付けなかった場合はただの警告になります。
 
+<!--
 However, the compiler will not perform exhaustivity checking if the
 `class` is not sealed or if there are guards, e.g.
+-->
+しかし、クラスを`sealed`を使って定義しなかった場合は、コンパイラが網羅性のチェックを行わないため、
+実行時に失敗してしまいます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1821,32 +1907,54 @@ However, the compiler will not perform exhaustivity checking if the
   scala.MatchError: Baz (of class Baz$)
     at .thing(<console>:15)
 ~~~~~~~~
-
+<!--
 To remain safe, don't use guards on `sealed` types.
+-->
+また、型の安全性を保つためには、`sealed`な型に対してガードを使わないようにする必要があります。
 
+<!--
 The [`-Xstrict-patmat-analysis`](https://github.com/scala/scala/pull/5617) flag has been proposed as a language
 improvement to perform additional pattern matcher checks.
+-->
+より厳密なパターンマッチの検証を行うために、[`-Xstrict-patmat-analysis`](https://github.com/scala/scala/pull/5617)というフラグを追加する言語の改善も提案されています。
 
-
+<!--
 ### Alternative Products and Coproducts
-
+-->
+### その他の積や余積
+<!--
 Another form of product is a tuple, which is like an unlabelled `final
 case class`.
+-->
+タプルも積の一種です。名前のついていない`final case class`であると考えることもできます。
 
+<!--
 `(A.type, B, C)` is equivalent to `ABC` in the above example but it is best to
 use `final case class` when part of an ADT because the lack of names is awkward
 to deal with, and `case class` has much better performance for primitive values.
+-->
+`(A.type, B, C)`というタプルは上記の例でいうところの`ABC`です。
+しかし、名前がついていないと使いづらいし、`case class`はプリミティブ型よりも優れたパフォーマンスを持つので、
+抽象データ型としては`final case class`を使うほうが望ましいです。
 
+<!--
 Another form of coproduct is when we nest `Either` types. e.g.
+-->
+`Either`などは余積と考えることもできるでしょう。
 
 {lang="text"}
 ~~~~~~~~
   Either[X.type, Either[Y.type, Z]]
 ~~~~~~~~
 
+<!--
 equivalent to the `XYZ` sealed abstract class. A cleaner syntax to define
 nested `Either` types is to create an alias type ending with a colon,
 allowing infix notation with association from the right:
+-->
+これは、上記の`XYZ`に相当します。
+名前がコロンで終わる型エイリアスを作ることで右からの関連付けによる中置記法を使うことができるので、
+これを使って入れ子になった`Either`を読みやすくすることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1855,16 +1963,22 @@ allowing infix notation with association from the right:
   X.type |: Y.type |: Z
 ~~~~~~~~
 
+<!--
 This is useful to create anonymous coproducts when we cannot put all
 the implementations into the same source file.
+-->
+すべての実装を同一のソースファイルに含めることができない場合、この手法は無名の余積を作るのに便利です。
 
 {lang="text"}
 ~~~~~~~~
   type Accepted = String |: Long |: Boolean
 ~~~~~~~~
-
+<!--
 Yet another alternative coproduct is to create a custom `sealed abstract class`
 with `final case class` definitions that simply wrap the desired type:
+-->
+このような場合は、適当な`sealed abstract class`を定義して、
+それぞれの型を単純に`final case class`でラップすることでも余積を表現できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -1874,11 +1988,15 @@ with `final case class` definitions that simply wrap the desired type:
   final case class AcceptedBoolean(value: Boolean) extends Accepted
 ~~~~~~~~
 
+<!--
 Pattern matching on these forms of coproduct can be tedious, which is why [Union
 Types](https://contributors.scala-lang.org/t/733) are being explored in the Dotty next-generation Scala compiler. Macros
 such as [totalitarian](https://github.com/propensive/totalitarian) and [iotaz](https://github.com/frees-io/iota) exist as alternative ways of encoding anonymous
 coproducts.
-
+-->
+こういった形の余積のパターンマッチは面倒なことがあるので、次世代のScalaコンパイラであるDottyでは[和集合型（
+Union Types）](https://contributors.scala-lang.org/t/733)の導入が検討されています。
+無名の余積をエンコードするための代替手法として、[totalitarian](https://github.com/propensive/totalitarian)や[iotaz](https://github.com/frees-io/iota)といったマクロもあります。
 
 ### Convey Information
 

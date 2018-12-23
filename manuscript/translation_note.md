@@ -33,3 +33,5 @@
 | happy path | 正常経路 | Application Design / Business Logic | - |
 | Extreame Mockiing | エクストリーム・モック | Application Design / Business Logic / initial | - |
 | dependency algebra | 依存代数 | Application Design / Unit test | - |
+| products | 積 | Data and Functionality / Data | - |
+| coproducts | 余積 | Data and Functionality / Data | - |
