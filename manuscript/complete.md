@@ -1998,21 +1998,36 @@ coproducts.
 Union Types）](https://contributors.scala-lang.org/t/733)の導入が検討されています。
 無名の余積をエンコードするための代替手法として、[totalitarian](https://github.com/propensive/totalitarian)や[iotaz](https://github.com/frees-io/iota)といったマクロもあります。
 
+<!--
 ### Convey Information
+-->
+### 情報伝達
 
+<!--
 Besides being a container for necessary business information, data
 types can be used to encode constraints. For example,
+-->
+データ型はビジネスに必要な情報を保持する入れ物であるだけではなく、制約を表現することもできます。
+例えば、
 
 {lang="text"}
 ~~~~~~~~
   final case class NonEmptyList[A](head: A, tail: IList[A])
 ~~~~~~~~
 
+<!--
 can never be empty. This makes `scalaz.NonEmptyList` a useful data type despite
 containing the same information as `IList`.
+-->
+この`NonEmptyList`は空になることがありません。この性質のおかげで、`scalaz.NonEmptyList`は`IList`と
+同じデータを持っていたとしても型として有用なことがあります。
 
+<!--
 Product types often contain types that are far more general than is allowed. In
 traditional OOP this would be handled with input validation through assertions:
+-->
+積となるデータ型には、実際に許容できる値よりも一般的な型を持っていることがあります。
+この場合、従来のオブジェクト指向プログラミングでは、アサーションによる入力検証を行います。
 
 {lang="text"}
 ~~~~~~~~
@@ -2020,10 +2035,13 @@ traditional OOP this would be handled with input validation through assertions:
     require(name.nonEmpty && age > 0) // breaks Totality, don't do this!
   }
 ~~~~~~~~
-
+<!--
 Instead, we can use the `Either` data type to provide `Right[Person]` for valid
 instances and protect invalid instances from propagating. Note that the
 constructor is `private`:
+-->
+関数型プログラミングでは、`Either`のようなデータ型を使って、有効なインスタンスに対しては`Right[Person]`を返すようにして、
+無効なインスタンスが伝播することを防ぐことができます。この場合、コンストラクタを`private`にする必要があることに注意してください。
 
 {lang="text"}
 ~~~~~~~~
@@ -2043,33 +2061,47 @@ constructor is `private`:
   } yield welcome(person)
 ~~~~~~~~
 
-
+<!--
 #### Refined Data Types
-
+-->
+#### 洗練されたデータ型
+<!--
 A clean way to restrict the values of a general type is with the `refined`
 library, providing a suite of restrictions to the contents of data. To install
 refined, add the following to `build.sbt`
+-->
+一般的な型の値を制限する上手なやり方は、*refined（洗練された）*ライブラリを使って、データの内容に一連の制限を設けることです。
+それでは、`build.sbt`に`refiend`ライブラリを追加してみましょう。
 
 {lang="text"}
 ~~~~~~~~
   libraryDependencies += "eu.timepit" %% "refined-scalaz" % "0.9.2"
 ~~~~~~~~
-
+<!--
 and the following imports
+-->
+以下はこのライブラリを使用するのに必要なインポートです。
 
 {lang="text"}
 ~~~~~~~~
   import eu.timepit.refined
   import refined.api.Refined
 ~~~~~~~~
-
+<!--
 `Refined` allows us to define `Person` using adhoc refined types to capture
 requirements exactly, written `A Refined B`.
+-->
+`Refined`を使うと、`A Refined B`といった記法で、必要に応じて要件を正確に捉えるための洗練された型を使って`Person`を定義できます。
 
+<!--
 A> All types with two parameters can be written *infix* in Scala. For example,
 A> `Either[String, Int]` is the same as `String Either Int`. It is conventional for
 A> `Refined` to be written infix since `A Refined B` can be read as "an `A` that
 A> meets the requirements defined in `B`".
+-->
+A> Scalaでは2つのパラメータを受け取る型は全て*中置記法*を使って表現することができます。
+A> `Either[String, Int]`は`String Either Int`と書くことができます。
+A> この記法を使うと、`A Refined B`は「`B`で要件を満たす`A`」と読むことができるので、`Refined`は中置記法を使用するようにします。
 
 {lang="text"}
 ~~~~~~~~
@@ -2081,9 +2113,12 @@ A> meets the requirements defined in `B`".
     age: Int Refined Positive
   )
 ~~~~~~~~
-
+<!--
 The underlying value can be obtained with `.value`. We can construct a
 value at runtime using `.refineV`, returning an `Either`
+-->
+`String`や`Int`の実際の値は`.value`で得ることができます。
+実行時に`.refineV`を使うと`Either`で値を得ることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2095,15 +2130,21 @@ value at runtime using `.refineV`, returning an `Either`
   Right(Sam)
 ~~~~~~~~
 
+<!--
 If we add the following import
-
+-->
+以下のインポートを追加してみてください。
 {lang="text"}
 ~~~~~~~~
   import refined.auto._
 ~~~~~~~~
 
+<!--
 we can construct valid values at compiletime and get an error if the provided
 value does not meet the requirements
+-->
+値が有効かどうかをコンパイル時にチェックし、 与えられた値が要件を満たさなかった場合はエラーを出力するようになります。
+
 
 {lang="text"}
 ~~~~~~~~
@@ -2113,9 +2154,11 @@ value does not meet the requirements
   scala> val empty: String Refined NonEmpty = ""
   <console>:21: error: Predicate isEmpty() did not fail.
 ~~~~~~~~
-
+<!--
 More complex requirements can be captured, for example we can use the built-in
 rule `MaxSize` with the following imports
+-->
+`MaxSize`のようなビルドインのルールを使って、より複雑な要求を表現することもできます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2123,9 +2166,11 @@ rule `MaxSize` with the following imports
   import refined.boolean.And
   import refined.collection.MaxSize
 ~~~~~~~~
-
+<!--
 capturing the requirement that the `String` must be both non-empty and have a
 maximum size of 10 characters:
+-->
+空ではなく最大長が10字である`String`、という要件は以下のように記述します。
 
 {lang="text"}
 ~~~~~~~~
@@ -2137,18 +2182,23 @@ maximum size of 10 characters:
   )
 ~~~~~~~~
 
+<!--
 A> The `W` notation is short for "witness". This syntax will be much simpler in
 A> Scala 2.13, which has support for *literal types*:
 A> 
+-->
+A> `W`という記法は`witness（証拠）`の省略です。この構文はScala2.13では`literal type`がサポートされるのでより単純になります。
 A> {lang="text"}
 A> ~~~~~~~~
 A>   type Name = NonEmpty And MaxSize[10]
 A> ~~~~~~~~
-
+<!--
 It is easy to define custom requirements that are not covered by the refined
 library. For example in `drone-dynamaic-agents` we will need a way of ensuring
 that a `String` contains `application/x-www-form-urlencoded` content. We can
 create a `Refined` rule using the Java regular expression library:
+-->
+標準で`refined`ライブラリに用意されていない要求を自分で定義することも簡単にできます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2166,44 +2216,82 @@ create a `Refined` rule using the Java regular expression library:
   }
 ~~~~~~~~
 
-
+<!--
 ### Simple to Share
-
+-->
+### 共有の単純さ
+<!--
 By not providing any functionality, ADTs can have a minimal set of
 dependencies. This makes them easy to publish and share with other
 developers. By using a simple data modelling language, it makes it
 possible to interact with cross-discipline teams, such as DBAs, UI
 developers and business analysts, using the actual code instead of a
 hand written document as the source of truth.
+-->
+データが機能を持たないことによって、抽象データ型は最小限の依存しか持たずに済みます。
+依存が少なければ、これを公開して他の開発者と共有することが簡単になります。
+単純なデータモデリング言語を用いることによって、真となる情報源として、手書きのドキュメントを用いる代わりに
+実際のソースコードを使って、DBAやUI開発者、ビジネスアナリストと分野横断的に対話することが可能になります。
 
+<!--
 Furthermore, tooling can be more easily written to produce or consume
 schemas from other programming languages and wire protocols.
+-->
+さらに、他のプログラミング言語やワイヤプロトコルのスキーマを生成したりそれを利用するツールを簡単に作ることが
+できるようになります。
 
-
+<!--
 ### Counting Complexity
-
+-->
+### 複雑さの計測
+<!--
 The complexity of a data type is the count of values that can exist. A good data
 type has the least amount of complexity it needs to hold the information it
 conveys, and no more.
+-->
+あるデータ型の複雑さはそのデータ型が取り得る値の数によって計測できます。
+よいデータ型はそれが伝達すべき情報を表現するのに取り得る値の数が最小限であり、例外的な値を取ることはできません。
 
+<!--
 Values have a built-in complexity:
 
 -   `Unit` has one value (why it is called "unit")
 -   `Boolean` has two values
 -   `Int` has 4,294,967,295 values
 -   `String` has effectively infinite values
+-->
+値はそれ自体が決まった複雑さを持っています。
 
+-   `Unit`は1つの値しか取ることができません。（これが「unit」という名前の由来です。）
+-   `Boolean`が取り得る値の数は2つです。
+-   `Int`が取り得る値の数は4,294,967,295個です。
+-   `String`が取り得る値の数は、事実上無限です。
+
+<!--
 To find the complexity of a product, we multiply the complexity of
 each part.
 
 -   `(Boolean, Boolean)` has 4 values (`2*2`)
 -   `(Boolean, Boolean, Boolean)` has 8 values (`2*2*2`)
+-->
+積の複雑さはそれぞれの値の複雑さを掛けることで求められます。
 
+
+-   `(Boolean, Boolean)`が取り得る値の数は4つです。（`2*2`）
+-   `(Boolean, Boolean, Boolean)`が取り得る値の数は8つです。（`2*2*2`）
+
+<!--
 To find the complexity of a coproduct, we add the complexity of each
 part.
 
 -   `(Boolean |: Boolean)` has 4 values (`2+2`)
 -   `(Boolean |: Boolean |: Boolean)` has 6 values (`2+2+2`)
+-->
+
+余積の複雑さは取り得る値の数を足し合わせて求めます。
+
+-   `(Boolean |: Boolean)`が取り得る値の数は4つです。（`2+2`）
+-   `(Boolean |: Boolean |: Boolean)`が取り得る値の数は6つです。（`2+2+2`）
 
 To find the complexity of a ADT with a type parameter, multiply each part by the
 complexity of the type parameter:
