@@ -2351,7 +2351,7 @@ satisfy the type signature: the output to the power of the input.
 -   `Int => Boolean` is so big that if all implementations were assigned a unique
     number, each would require 4 gigabytes to represent.
 -->
-全域関数の複雑さは型シグネチャを満たすことができる関数の数になります。つまり、出力の複雑さを入力の複雑さでべき乗します。
+全域関数の複雑さは型シグネチャを満たすことができる関数の数になります。つまり、出力の複雑さを入力の複雑さで冪乗します。
 
 -   `Unit => Boolean`の複雑さは2です。
 -   `Boolean => Boolean`の複雑さは4です。
@@ -2359,14 +2359,24 @@ satisfy the type signature: the output to the power of the input.
 -   `Boolean => Int`の複雑さ10垓（10^21）の5分位値くらいです。
 -   `Int => Boolean`の複雑さは非常に大きく、すべての実装に一意の番号を割り当てると、それぞれを表現するのに4ギガバイト必要になります。
 
+<!--
 In reality, `Int => Boolean` will be something simple like `isOdd`, `isEven` or
 a sparse `BitSet`. This function, when used in an ADT, could be better replaced
 with a coproduct labelling the limited set of functions that are relevant.
+-->
+実際は、`Int => Boolean`のような関数は`isOdd`、`isEven`、あるいは幾つかの値を保持した`BitSet`を使った演算といったものになります。
+抽象データ型で関数を扱う場合、単純に`Int => Boolean`のような型を用いるよりも、関連性のある関数の限定的な集まりに名前をつけた余積を
+用いるとよいことがあります。
 
+<!--
 When our complexity is "infinity in, infinity out" we should introduce
 restrictive data types and validation closer to the point of input with
 `Refined` from the previous section.
+-->
+「入力の複雑さが無限、あるいは出力の複雑さが無限」の場合、より制限の強いデータ型用い、前節で紹介した`Refined`を使って
+入力が与えられる箇所に近いところで検証を行う必要があります。
 
+<!--
 The ability to count the complexity of a type signature has one other practical
 application: we can find simpler type signatures with High School algebra! To go
 from a type signature to its algebra of complexity, simply replace
@@ -2374,17 +2384,32 @@ from a type signature to its algebra of complexity, simply replace
 -   `Either[A, B]` with `a + b`
 -   `(A, B)` with `a * b`
 -   `A => B` with `b ^ a`
+-->
+型のシグネチャを使って複雑さを計測することには、もう1つ実用的な用途があります。
+高校の代数の教科書には、もっと簡単な型のシグネチャがあります。
+型のシグネチャは、以下のように簡単に代数のシグネチャに置き換えて考えることができます。
 
+-   `Either[A, B]`は`a + b`です。
+-   `(A, B)`は`a * b`です。
+-   `A => B`は`b ^ a`です。
+
+<!--
 do some rearranging, and convert back. For example, say we've designed a
 framework based on callbacks and we've managed to work ourselves into the
 situation where we have created this type signature:
+-->
+幾つかの並べ替えをして、それを元に戻してみます。
+例えば、コールバックを使ったフレームワークを設計していて、以下のような型シグネチャを使って
+上手く状況に対応できたと仮定します。
 
 {lang="text"}
 ~~~~~~~~
   (A => C) => ((B => C) => C)
 ~~~~~~~~
-
+<!--
 We can convert and rearrange
+-->
+これを以下のような式に置き換えて、式を整えます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2392,33 +2417,43 @@ We can convert and rearrange
   = c ^ ((c ^ b) * (c ^ a))
   = c ^ (c ^ (a + b))
 ~~~~~~~~
-
+<!--
 then convert back to types and get
+-->
+この整った式を型のシグネチャに戻すと以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
   (Either[A, B] => C) => C
 ~~~~~~~~
-
+<!--
 which is much simpler: we only need to ask the users of our framework to provide
 a `Either[A, B] => C`.
+-->
+こちらのシグネチャはずっと簡単ですね。フレームワークのユーザーは`Either[A, B] => C`を提供するだけでこのフレームワークを利用できます。
 
+<!--
 The same line of reasoning can be used to prove that
+-->
+同様に、
 
 {lang="text"}
 ~~~~~~~~
   A => B => C
 ~~~~~~~~
 
-is equivalent to
+この式は
 
 {lang="text"}
 ~~~~~~~~
   (A, B) => C
 ~~~~~~~~
-
+<!--
 also known as *Currying*.
+-->
 
+と同じ、ということができます。
+このようなを*カリー化*と言います。
 
 ### Prefer Coproduct over Product
 
