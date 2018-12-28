@@ -2453,14 +2453,21 @@ also known as *Currying*.
 -->
 
 と同じ、ということができます。
-このようなを*カリー化*と言います。
+このような変形を*カリー化*と言います。
 
+<!--
 ### Prefer Coproduct over Product
-
+-->
+### 積よりは余積を用いる
+<!--
 An archetypal modelling problem that comes up a lot is when there are
 mutually exclusive configuration parameters `a`, `b` and `c`. The
 product `(a: Boolean, b: Boolean, c: Boolean)` has complexity 8
 whereas the coproduct
+-->
+互いに排他的な設定パラメータ`a`、`b`、`c`があるような場合、典型的なモデリングの問題が発生します。
+これを積`(a: Boolean, b: Boolean, c: Boolean)`で表現した場合、複雑さは8になります。
+一方で、以下のような余積で表現した場合、複雑さは3です。
 
 {lang="text"}
 ~~~~~~~~
@@ -2471,32 +2478,52 @@ whereas the coproduct
     case object C extends Config
   }
 ~~~~~~~~
-
+<!--
 has a complexity of 3. It is better to model these configuration
 parameters as a coproduct rather than allowing 5 invalid states to
 exist.
+-->
+積で表現した場合、5つの無効な状態が存在することになるので、このような設定パラメータは積よりも余積で表現した方がよいでしょう。
 
+<!--
 The complexity of a data type also has implications on testing. It is
 practically impossible to test every possible input to a function, but it is
 easy to test a sample of values with the [Scalacheck](https://www.scalacheck.org/) property testing framework.
 If a random sample of a data type has a low probability of being valid, it is a
 sign that the data is modelled incorrectly.
+-->
+データ型の複雑さはテストにも影響します。全ての入力可能な値に基づいたテストをすることは事実上不可能です。
+しかし、[Scalacheck](https://www.scalacheck.org/)のようなプロパティベーステストフレームワークを利用すると、
+簡単に幾つかのサンプル値を使ったテストを実施することができます。
+無作為に生成したデータ型のサンプル値を使ったテストが成功する頻度が低い場合、それはデータを正しくモデル化できていない兆候です。
 
-
+<!--
 ### Optimisations
-
+-->
+### 最適化
+<!--
 A big advantage of using a simplified subset of the Scala language to
 represent data types is that tooling can optimise the JVM bytecode
 representation.
+-->
+Scala言語の単純化されたサブセットを使ってデータ型を表現することの大きな利点の1つは、
+ツールを使ってJVMのバイトコード表現を最適化できることです。
 
+<!--
 For example, we could pack `Boolean` and `Option` fields into an `Array[Byte]`,
 cache values, memoise `hashCode`, optimise `equals`, use `@switch` statements
 when pattern matching, and much more.
+-->
+例えば、`Boolean`と`Option`のフィールドを`Array[Byte]`にキャッシュしたり、`equals`を最適化したり、
+パターンマッチをする時に`@switch`文を使ったりできます。
 
+<!--
 These optimisations are not applicable to OOP `class` hierarchies that
 may be managing state, throwing exceptions, or providing adhoc method
 implementations.
-
+-->
+状態を管理していたり、例外を投げる可能性があったり、アドホックなメソッドの実装を提供していたりする
+オブジェクト指向プログラミング的な*クラス*の階層に対してこのような最適化を施すことはできません。
 
 ## Functionality
 
