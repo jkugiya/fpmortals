@@ -11,7 +11,7 @@
 | context | コンテキスト | Introduction / Abstracting over Execution | - |
 | for comprehension | for内包表記 / Abstracting over Execution | Introduction | - |
 | pure functions | 純粋関数 | Introduction / Pure Functional Programming | - |
-| total | 完全性 | Intruduction / Pure Functional Programming | (完全関係)[https://ja.wikipedia.org/wiki/%E5%AE%8C%E5%85%A8%E9%96%A2%E4%BF%82]より |
+| total | 全域性/全域的 | Intruduction / Pure Functional Programming | (全域写像)[https://ja.wikipedia.org/wiki/%E5%86%99%E5%83%8F]より |
 | deterministic | 決定性 | Intruduction / Pure Functional Programming | - |
 | Inculpable | 純粋性 | Intruduction / Pure Functional Programming | 直訳は無実の、という意味。使用方法は純粋と同義なので、「純粋」という言葉を使用 |
 | side effect | 副作用 | Intruduction / Pure Functional Programming | - |
@@ -21,7 +21,7 @@
 | the end of the world | 世界の最果て |  Intruduction / Pure Functional Programming | - |
 | syntax sugar | 糖衣構文 | For Comprehensions / Syntax Sugar | - |
 | type inference | 型推論 | For Comprehensions / Syntax Sugar | - |
-| totality | 完全性 | For Comprehensions / Syntax Sugar / Assignment | (完全関係)[https://ja.wikipedia.org/wiki/%E5%AE%8C%E5%85%A8%E9%96%A2%E4%BF%82]より |
+| totality | 全域性 | For Comprehensions / Syntax Sugar / Assignment | (全域写像)[https://ja.wikipedia.org/wiki/%E5%86%99%E5%83%8F]より |
 | predicate | 述語 | For Comprehensions / Syntax Sugar / Filter | - |
 | unhappy path | 失敗経路 | For Comprehensions / Unhappy path | 不幸経路という語はあまり使用されないと思われたので、一般的に使用されていると思われる語を使用 |
 | short circuit | 中断 | For Comprehensions /  Unhappy path | - |

@@ -188,7 +188,7 @@ A>
 A> But be careful not to miss any cases or there will be a runtime exception (a
 A> *totality* failure).
 -->
-A> しかし、（*完全性*の不備による）実行時例外を起こさないよう、ケース漏れに注意する必要があります。
+A> しかし、（*全域性*の不備による）実行時例外を起こさないよう、ケース漏れに注意する必要があります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -409,7 +409,7 @@ A> is to use a `for` comprehension, giving us totality (a return value for every
 A> input):
 -->
 A> `Option`をパラメータに受け取っておきながら、実際には値が存在することを期待している関数がよく見受けられます。
-A> 例外を投げてしまう代わりに、`for`内包表記を使うことで完全性を得ることができます。（全ての入力に対して値を返すということです）
+A> 例外を投げてしまう代わりに、`for`内包表記を使うことで全域性を得ることができます。（全ての入力に対して値を返すということです）
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -1040,7 +1040,7 @@ Although we agree that parameters should be as general as possible, we do not ag
 -->
 A> パラメータができるだけ一般的であるべき、という話は問題ないでしょう。しかし、関数が空の`Seq`を処理できないにもかかわらず`Seq`という型を
 A> 取ってよいかという話には議論の余地があります。関数が処理できないパラメータを受け取ると、例外を必要とする原因になってしまいます。
-A> 例外は完全性の喪失や副作用の原因ともなります。
+A> 例外は全域性の喪失や副作用の原因ともなります。
 A> 
 <!--
 A> We prefer `NonEmptyList`, not because it is a `List`, but because of its
@@ -1766,7 +1766,7 @@ but a coproduct can be only one. For example
 written in Scala
 -->
 Scalaで表現すると、以下のようになります。
-
+<!--
 {lang="text"}
 ~~~~~~~~
   // values
@@ -1783,7 +1783,23 @@ Scalaで表現すると、以下のようになります。
   case object Y extends XYZ
   final case class Z(b: B) extends XYZ
 ~~~~~~~~
-
+-->
+{lang="text"}
+~~~~~~~~
+  // 値
+  case object A
+  type B = String
+  type C = Int
+  
+  // 積
+  final case class ABC(a: A.type, b: B, c: C)
+  
+  // 余積
+  sealed abstract class XYZ
+  case object X extends XYZ
+  case object Y extends XYZ
+  final case class Z(b: B) extends XYZ
+~~~~~~~~
 <!--
 ### Recursive ADTs
 -->
@@ -2028,11 +2044,18 @@ traditional OOP this would be handled with input validation through assertions:
 -->
 積となるデータ型には、実際に許容できる値よりも一般的な型を持っていることがあります。
 この場合、従来のオブジェクト指向プログラミングでは、アサーションによる入力検証を行います。
-
+<!--
 {lang="text"}
 ~~~~~~~~
   final case class Person(name: String, age: Int) {
     require(name.nonEmpty && age > 0) // breaks Totality, don't do this!
+  }
+~~~~~~~~
+-->
+{lang="text"}
+~~~~~~~~
+  final case class Person(name: String, age: Int) {
+    require(name.nonEmpty && age > 0) // これはコンストラクタの関数としての全域性を壊してしまうので、やらないように！
   }
 ~~~~~~~~
 <!--
@@ -2293,18 +2316,31 @@ part.
 -   `(Boolean |: Boolean)`が取り得る値の数は4つです。（`2+2`）
 -   `(Boolean |: Boolean |: Boolean)`が取り得る値の数は6つです。（`2+2+2`）
 
+<!--
 To find the complexity of a ADT with a type parameter, multiply each part by the
 complexity of the type parameter:
 
 -   `Option[Boolean]` has 3 values, `Some[Boolean]` and `None` (`2+1`)
+-->
+型パラメータを持つ抽象データ型の複雑さは、各具象データ型ごとに型パラメータの積の複雑さを求め、それらを足し合わせます。
 
+-   `Option[(Boolean, Boolean)]`は`Some[(Boolean, Boolean)]`と`None`を取りうるので、複雑さは5です。(`2*2+1`)
+-   `Option[Boolean |: Unit]`は`Some[Boolean |: Unit]`と`None`を取りうるので、複雑さは4です。(`(2+1)+1`)
+
+<!--
 In FP, functions are *total* and must return an value for every
 input, no `Exception`. Minimising the complexity of inputs and outputs
 is the best way to achieve totality. As a rule of thumb, it is a sign
 of a badly designed function when the complexity of a function's
 return value is larger than the product of its inputs: it is a source
 of entropy.
+-->
+関数型プログラミングにおいて、関数は*全域的*なので全ての入力に対して値を返す必要があります。
+例外を投げてはいけません。全域性を得るのに最も良い方法は、入力と出力の複雑さを最小限にすることです。
+経験則として、関数の戻り値の複雑さが入力値の積の複雑さよりも大きい場合は、関数の設計が不味い兆候です。
+そのような複雑さは高いエントロピーの原因です。
 
+<!--
 The complexity of a total function is the number of possible functions that can
 satisfy the type signature: the output to the power of the input.
 
@@ -2314,6 +2350,14 @@ satisfy the type signature: the output to the power of the input.
 -   `Boolean => Int` is a mere quintillion going on a sextillion.
 -   `Int => Boolean` is so big that if all implementations were assigned a unique
     number, each would require 4 gigabytes to represent.
+-->
+全域関数の複雑さは型シグネチャを満たすことができる関数の数になります。つまり、出力の複雑さを入力の複雑さでべき乗します。
+
+-   `Unit => Boolean`の複雑さは2です。
+-   `Boolean => Boolean`の複雑さは4です。
+-   `Option[Boolean] => Option[Boolean]`の複雑さは27です。
+-   `Boolean => Int`の複雑さ10垓（10^21）の5分位値くらいです。
+-   `Int => Boolean`の複雑さは非常に大きく、すべての実装に一意の番号を割り当てると、それぞれを表現するのに4ギガバイト必要になります。
 
 In reality, `Int => Boolean` will be something simple like `isOdd`, `isEven` or
 a sparse `BitSet`. This function, when used in an ADT, could be better replaced
