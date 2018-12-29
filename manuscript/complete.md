@@ -2525,9 +2525,15 @@ implementations.
 状態を管理していたり、例外を投げる可能性があったり、アドホックなメソッドの実装を提供していたりする
 オブジェクト指向プログラミング的な*クラス*の階層に対してこのような最適化を施すことはできません。
 
+<!--
 ## Functionality
+-->
+## 機能性
 
+<!--
 Pure functions are typically defined as methods on an `object`.
+-->
+純粋関数は通常、`object`の中に定義します。
 
 {lang="text"}
 ~~~~~~~~
@@ -2538,21 +2544,38 @@ Pure functions are typically defined as methods on an `object`.
   
   math.sin(1.0)
 ~~~~~~~~
-
+<!--
 However, it can be clunky to use `object` methods since it reads
 inside-out, not left to right. In addition, a function on an `object`
 steals the namespace. If we were to define `sin(t: T)` somewhere else
 we get *ambiguous reference* errors. This is the same problem as
 Java's static methods vs class methods.
+-->
+しかし、`object`のメソッドの呼び出しは、英語話者にとっては、左から右ではなく右から左に読む必要があり、不格好です。
+（`math.sin`は`the sin of math`なので、左から読む必要がある）
+だからといって、`object`のメソッドをインポートすると名前空間を汚します。
+このメソッドを使用しているクラスの中で`sin(t: T)`というメソッドをどこかに定義しようとすると、*曖昧な参照*であるというエラーが発生します。
+これはJavaにおいて、静的メソッドとインスタンスメソッドの間に起こる問題と同じです。
 
+<!--
 W> The sort of developer who puts methods on a `trait`, requiring users to mix it
 W> with the *cake pattern*, is going straight to hell. It leaks internal
 W> implementation detail to public APIs, bloats bytecode, makes binary
 W> compatibility basically impossible, and confuses IDE autocompleters.
+-->
 
+W> メソッドを`trait`に定義して、*Cake Pattern*を使って、それをミックスインして使うことをユーザーに強いるような開発者は地獄に落ちます。
+W> この手法は、内部実装の詳細を公開APIにしてしまい、バイトコードを肥大化させ、基本的にバイナリ互換性がなくなってしまいます。
+W> IDEのオートコンプリート機能も混乱してしまうでしょう。
+
+<!--
 With the `implicit class` language feature (also known as *extension
 methodology* or *syntax*), and a little boilerplate, we can get the
 familiar style:
+-->
+
+`implicit class（暗黙クラス）`（*拡張手法（extension methodology）*、*シンタックス*と呼ばれることもあります。）という言語機能と
+ちょっとしたボイラプレートを組み合わせると、この問題に対処できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2564,8 +2587,11 @@ familiar style:
   res: Double = 0.8414709848078965
 ~~~~~~~~
 
+<!--
 Often it is best to just skip the `object` definition and go straight
 for an `implicit class`, keeping boilerplate to a minimum:
+-->
+多くの場合、必要な実装をわざわざ`object`に書くのではなく、`implicit class`に直接書いてしまった方がボイラープレートを最小限にできます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2573,8 +2599,10 @@ for an `implicit class`, keeping boilerplate to a minimum:
     def sin: Double = java.lang.Math.sin(x)
   }
 ~~~~~~~~
-
+<!--
 A> `implicit class` is syntax sugar for an implicit conversion:
+-->
+A> `implicit class`は暗黙変換のための糖衣構文です。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -2584,13 +2612,21 @@ A>     def sin: Double = java.lang.Math.sin(x)
 A>   }
 A> ~~~~~~~~
 A> 
+<!--
 A> Which unfortunately has a runtime cost: each time the extension method
 A> is called, an intermediate `DoubleOps` will be constructed and then
 A> thrown away. This can contribute to GC pressure in hotspots.
+-->
+A> 残念ながら、この構文は実行時のコストがあります。暗黙クラスによって拡張したメソッドの呼び出し毎に`DoubleOps`の
+A> インスタンスを生成し、そのメソッドを呼び出します。このため、ホットスポットにおけるGC頻度の増大を引き起こす可能性があります。
 A> 
+<!--
 A> There is a slightly more verbose form of `implicit class` that avoids
 A> the allocation and is therefore preferred:
-A> 
+-->
+A> `implicit class`を定義する際、もう少し冗長な書き方をすることでインスタンスの割り当てを
+A> 回避できるので、できるだけこちらを使うとよいでしょう。
+A>
 A> {lang="text"}
 A> ~~~~~~~~
 A>   implicit final class DoubleOps(private val x: Double) extends AnyVal {
