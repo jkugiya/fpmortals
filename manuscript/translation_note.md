@@ -35,3 +35,4 @@
 | dependency algebra | 依存代数 | Application Design / Unit test | - |
 | products | 積 | Data and Functionality / Data | - |
 | coproducts | 余積 | Data and Functionality / Data | - |
+| typeclass coherence | 型クラスの論理一貫性 | Data and Functionality / Functionality | - |

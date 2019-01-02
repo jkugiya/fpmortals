@@ -2634,9 +2634,11 @@ A>     def sin: Double = java.lang.Math.sin(x)
 A>   }
 A> ~~~~~~~~
 
-
+<!--
 ### Polymorphic Functions
-
+-->
+### 多相関数
+<!--
 The more common kind of function is a polymorphic function, which
 lives in a *typeclass*. A typeclass is a trait that:
 
@@ -2645,24 +2647,52 @@ lives in a *typeclass*. A typeclass is a trait that:
 -   has at least one abstract method (*primitive combinators*)
 -   may contain *generalised* methods (*derived combinators*)
 -   may extend other typeclasses
+-->
 
+*型クラス*を使った多相関数はさらに応用範囲が広いです。型クラスは以下のような性質を持ちます。
+
+- 状態を持たない
+- 型パラメータ
+- 少なくとも1つの抽象メソッドを持つ（*プリミティブコンビネータ*）
+- 幾つかの*一般化*されたメソッドを持つことがある（*派生コンビネータ*）
+- 他の型クラスを拡張していることもある
+
+<!--
 There can only be one implementation of a typeclass for any given type
 parameter, a property known as *typeclass coherence*. Typeclasses look
 superficially similar to algebraic interfaces from the previous chapter, but
 algebras do not have to be coherent.
+-->
+
+与えられた型パラメータに対応する型クラスの実装はただ1つのみであり、これを*型クラスの論理一貫性*といいます。
+型クラスは表面上、前章で紹介した代数インターフェースと似ていますが、代数にはこのような一貫性はありません。
 
 A> Typeclass coherence is primarily about consistency, and the consistency gives us
 A> the confidence to use `implicit` parameters. It would be difficult to reason
 A> about code that performs differently depending on the implicit imports that are
 A> in scope. Typeclass coherence effectively says that imports should not impact
 A> the behaviour of the code.
+<!--
+A> 型クラスの論理一貫性とは、主にその振る舞いが一貫しているということであり、このことによって`implicit`パラメータが
+A> 及ぼす作用について確信を持てます。スコープ内の暗黙的なインポートの仕方によってコードの振る舞いが変わりうる場合、
+A> そのコードが実際にどのように動作するのかを推論することが難しくなることがあります。型クラスの論理一貫性を利用するということは、
+A> インポートの違いによって振る舞いが変わることを許さないということです。
 A> 
+<!--
 A> Additionally, typeclass coherence allows us to globally cache implicits at
 A> runtime and save memory allocations, gaining performance improvements from
 A> reduced pressure on the garbage collector.
+-->
+A> さらに、型クラスの論理一貫性は、暗黙的に宣言した型クラスのインスタンスをグローバルにキャッシュし、
+A> 実行時のメモリ割り当てを節約することを可能にします。これによりガベージコレクタのメモリプレッシャーを
+A> 減らすことができるので、パフォーマンスの向上にも寄与します。
 
+<!--
 Typeclasses are used in the Scala stdlib. We will explore a simplified
 version of `scala.math.Numeric` to demonstrate the principle:
+-->
+型クラスはScalaの標準ライブラリでも使用されています。
+この原則がどのように作用するのかをデモするために、`scala.math.Numeric`を簡単にしたバージョンのコードを見てみましょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -2682,7 +2712,7 @@ version of `scala.math.Numeric` to demonstrate the principle:
     def abs(x: T): T = if (lt(x, zero)) negate(x) else x
   }
 ~~~~~~~~
-
+<!--
 We can see all the key features of a typeclass in action:
 
 -   there is no state
@@ -2695,6 +2725,15 @@ We can see all the key features of a typeclass in action:
 
 We can now write functions for types that "have a" `Numeric`
 typeclass:
+-->
+以下のように、型クラスの機能が動作していることを確認できます。
+
+-   状態はありません。
+-   `Ordering`と`Numeric`は型パラメータ`T`を持ちます。
+-   `Ordering`は`compare`という抽象メソッドを持ち、`Numeric`は`plus`、`times`、`negate`、`zero`という抽象メソッドを持っています。
+-   `Ordering`は`compare`を元にして`lt`や`gt`という一般化されたメソッドを持ちます。
+    `Numeric`は`lt`と`negate`、`zero`を使用して`abs`というメソッドを作っています。
+-   `Numeric`は`Ordering`を拡張しています。
 
 {lang="text"}
 ~~~~~~~~
@@ -2703,21 +2742,34 @@ typeclass:
     times(negate(abs(t)), t)
   }
 ~~~~~~~~
-
+<!--
 We are no longer dependent on the OOP hierarchy of our input types,
 i.e. we don't demand that our input "is a" `Numeric`, which is vitally
 important if we want to support a third party class that we cannot
 redefine.
+-->
+`Numeric`によって拡張されたメソッドの入力`T`は`Numeric`と`is a`の関係であることを要求しません。
+オブジェクト指向プログラミング的な階層関係を持たないということです。
+この性質は、自分で親クラスにメソッドを追加したり、サブクラスを作ったりすることで拡張することができない
+サードパーティ製のクラスをサポートする際、非常に重要です。
 
+<!--
 Another advantage of typeclasses is that the association of
 functionality to data is at compiletime, as opposed to OOP runtime
 dynamic dispatch.
+-->
+型クラスのもう1つの利点は、機能とデータの関連付けがコンパイル時に行われることです。
+これは、オブジェクト指向の動的ディスパッチでは実行時に行われるのと対照的です。
 
+<!--
 For example, whereas the `List` class can only have one implementation
 of a method, a typeclass method allows us to have a different
 implementation depending on the `List` contents and therefore offload
 work to compiletime instead of leaving it to runtime.
-
+-->
+例えば、`List`クラスはメソッドの実装をただ1つしか持つことができませんが、型クラスの場合は`List`の
+内容（`List[String]`や`List[Int]`）に応じて異なる実装を持つことができます。
+このため、拡張されたメソッドの解決は実行時ではなくコンパイル時に行います。
 
 ### Syntax
 
