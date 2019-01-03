@@ -2574,7 +2574,7 @@ methodology* or *syntax*), and a little boilerplate, we can get the
 familiar style:
 -->
 
-`implicit class（暗黙クラス）`（*拡張手法（extension methodology）*、*シンタックス*と呼ばれることもあります。）という言語機能と
+`implicit class（暗黙クラス）`（*拡張手法（extension methodology）*、*構文論*と呼ばれることもあります。）という言語機能と
 ちょっとしたボイラプレートを組み合わせると、この問題に対処できます。
 
 {lang="text"}
@@ -2771,22 +2771,36 @@ work to compiletime instead of leaving it to runtime.
 内容（`List[String]`や`List[Int]`）に応じて異なる実装を持つことができます。
 このため、拡張されたメソッドの解決は実行時ではなくコンパイル時に行います。
 
+<!--
 ### Syntax
+-->
 
+### 構文論
+<!--
 The syntax for writing `signOfTheTimes` is clunky, there are some
 things we can do to clean it up.
+-->
+`signOfTheTimes`を書くための構文は不格好ですが、改善の余地があります。
 
+<!--
 Downstream users will prefer to see our method use *context bounds*,
 since the signature reads cleanly as "takes a `T` that has a
 `Numeric`"
+-->
+
+`Numeric`の型クラスの実装を持つ`T`であることを素直に読み取れるので、
+メソッドの下流ユーザーは*コンテキスト・バインド*を使うのを好むかもしれません。
 
 {lang="text"}
 ~~~~~~~~
   def signOfTheTimes[T: Numeric](t: T): T = ...
 ~~~~~~~~
-
+<!--
 but now we have to use `implicitly[Numeric[T]]` everywhere. By
 defining boilerplate on the companion of the typeclass
+-->
+しかし、このままでは`implicitly[Numeric[T]]`という記述をあらゆるところでしなければいけません。
+そこで、型クラスを使ってコンパニオンオブジェクトに一工夫します。
 
 {lang="text"}
 ~~~~~~~~
@@ -2794,8 +2808,10 @@ defining boilerplate on the companion of the typeclass
     def apply[T](implicit numeric: Numeric[T]): Numeric[T] = numeric
   }
 ~~~~~~~~
-
+<!--
 we can obtain the implicit with less noise
+-->
+これで型クラスのインスタンスを取得するコードのノイズが減ったと思います。
 
 {lang="text"}
 ~~~~~~~~
@@ -2806,9 +2822,15 @@ we can obtain the implicit with less noise
   }
 ~~~~~~~~
 
+<!--
 But it is still worse for us as the implementors. We have the
 syntactic problem of inside-out static methods vs class methods. We
 deal with this by introducing `ops` on the typeclass companion:
+-->
+しかし、実装者にとってはまだ厄介な問題が残っています。
+型クラスのインスタンスを解決できるだけでは、型クラスのメソッドをインポートした時に
+クラスのインスタンスが持つメソッドの名前と衝突する可能性があります。
+そこで、型クラスのコンパニオンオブジェクトに`ops`というオブジェクトを定義します。
 
 {lang="text"}
 ~~~~~~~~
@@ -2829,10 +2851,14 @@ deal with this by introducing `ops` on the typeclass companion:
     }
   }
 ~~~~~~~~
-
+<!--
 Note that `-x` is expanded into `x.unary_-` by the compiler's syntax
 sugar, which is why we define `unary_-` as an extension method. We can
 now write the much cleaner:
+-->
+
+コードで`-x`と書いた場合、これはコンパイラの糖衣構文なので、実際には`x.unary_-`というメソッドの呼び出しに変換されます。
+このため、上記のコードで`unary_-`というメソッドを定義し、より見やすいコードを書けるようにしています。
 
 {lang="text"}
 ~~~~~~~~
@@ -2840,11 +2866,17 @@ now write the much cleaner:
   def signOfTheTimes[T: Numeric](t: T): T = -(t.abs) * t
 ~~~~~~~~
 
+<!--
 The good news is that we never need to write this boilerplate because
 [Simulacrum](https://github.com/mpilquist/simulacrum) provides a `@typeclass`
 macro annotation that automatically generates the `apply` and `ops`. It even
 allows us to define alternative (usually symbolic) names for common methods. In
 full:
+-->
+[Simulacrum](https://github.com/mpilquist/simulacrum)の`@typeclass`というマクロアノテーションを使うと、
+自動的に`apply`や`ops`の実装を生成してくれるので、このようなボイラープレートを減らすことができます。
+また、一般的なメソッドの別名（通常は記号を使ったもの）を定義することもできます。
+具体的なコード例は以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -2868,9 +2900,14 @@ full:
   def signOfTheTimes[T: Numeric](t: T): T = -(t.abs) * t
 ~~~~~~~~
 
+<!--
 When there is a custom symbolic `@op`, it can be pronounced like its method
 name. e.g. `<` is pronounced "less than", not "left angle bracket".
+-->
 
+記号で書かれたメソッドはどのように読めばよいのかという問題が発生しがちですが、
+このように記述されたコードでは、`@op`で注釈されたメソッドの名前で読めばよい、ということが明白です。
+例えば、`<`の読み方は"less than"であり、"左に尖った括弧"ではありません。
 
 ### Instances
 
