@@ -2909,11 +2909,19 @@ name. e.g. `<` is pronounced "less than", not "left angle bracket".
 このように記述されたコードでは、`@op`で注釈されたメソッドの名前で読めばよい、ということが明白です。
 例えば、`<`の読み方は"less than"であり、"左に尖った括弧"ではありません。
 
+<!--
 ### Instances
+-->
 
+### インスタンス
+<!--
 *Instances* of `Numeric` (which are also instances of `Ordering`) are
 defined as an `implicit val` that extends the typeclass, and can
 provide optimised implementations for the generalised methods:
+-->
+`Numeric`の*インスタンス*（これは同時に`Ordering`のインスタンスです。）は
+`implicit val`という宣言を使い、型クラスを拡張して定義します。
+これによって一般化されたメソッドに適切な実装を提供することができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -2931,15 +2939,26 @@ provide optimised implementations for the generalised methods:
   }
 ~~~~~~~~
 
+<!--
 Although we are using `+`, `*`, `unary_-`, `<` and `>` here, which are
 the ops (and could be an infinite loop!), these methods exist already
 on `Double`. Class methods are always used in preference to extension
 methods. Indeed, the Scala compiler performs special handling of
 primitives and converts these method calls into raw `dadd`, `dmul`,
 `dcmpl` and `dcmpg` bytecode instructions, respectively.
+-->
+ここで`+`、`*`、`unary_-`、`<`、`>`といったメソッドを使用しています。これらは`ops`にも定義されていますが
+（したがって、無限ループに陥る可能性があります。）、`Double`にすでに存在するメソッドです。
+クラスのインスタンスメソッドは、拡張メソッドよりも優先的に使用されます。
+実際に、Scalaのコンパイラはプリミティブに対して特殊な処理を行い、これらのメソッド呼び出しをそれぞれ
+`dadd`、`dmul`、`dcmpl`、`dcmpg`といった生のバイトコード命令に変換します。
 
+<!--
 We can also implement `Numeric` for Java's `BigDecimal` class (avoid
 `scala.BigDecimal`, [it is fundamentally broken](https://github.com/scala/bug/issues/9670))
+-->
+同様に、Javaの`BigDecimal`に対する`Numeric`も実装できます。
+（`scala.BigDecimal`は使用しないようにしてください。このクラスは[基本的に壊れています](https://github.com/scala/bug/issues/9670)。）
 
 {lang="text"}
 ~~~~~~~~
@@ -2954,15 +2973,22 @@ We can also implement `Numeric` for Java's `BigDecimal` class (avoid
   }
 ~~~~~~~~
 
+<!--
 We could create our own data structure for complex numbers:
+-->
+さらに、複雑な数を表現するための独自データ型を作ってみましょう。
 
 {lang="text"}
 ~~~~~~~~
   final case class Complex[T](r: T, i: T)
 ~~~~~~~~
 
+<!--
 And derive a `Numeric[Complex[T]]` if `Numeric[T]` exists. Since these
 instances depend on the type parameter, it is a `def`, not a `val`.
+-->
+そして、`Numeric[T]`が存在する場合は`Numeric[Complext[T]]`を得られるようにします。
+インスタンスが型パラメータに依存するので、`val`ではなく`def`を使用します。
 
 {lang="text"}
 ~~~~~~~~
@@ -2982,15 +3008,23 @@ instances depend on the type parameter, it is a `def`, not a `val`.
     }
 ~~~~~~~~
 
+<!--
 The observant reader may notice that `abs` is not at all what a
 mathematician would expect. The correct return value for `abs` should
 be `T`, not `Complex[T]`.
+-->
+注意深い方は`abs`が全く数学的に期待される挙動にならないことに気づいているかもしれません。
+正しくするには、`abs`が`Complex[T]`ではなく`T`を返せるようにする必要があります。
 
+<!--
 `scala.math.Numeric` tries to do too much and does not generalise
 beyond real numbers. This is a good lesson that smaller, well defined,
 typeclasses are often better than a monolithic collection of overly
 specific features.
+-->
 
+`scala.math.Numeric`はあまりの多くのことをしようとした結果、実数を超えた表現ができません。
+これは、小さくて明確に定義された型クラスの方が、特殊な機能を集めたモノリシックな集合よりも優れているということがわかる教訓です。
 
 ### Implicit Resolution
 
