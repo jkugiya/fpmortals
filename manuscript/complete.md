@@ -3026,43 +3026,75 @@ specific features.
 `scala.math.Numeric`はあまりの多くのことをしようとした結果、実数を超えた表現ができません。
 これは、小さくて明確に定義された型クラスの方が、特殊な機能を集めたモノリシックな集合よりも優れているということがわかる教訓です。
 
+<!--
 ### Implicit Resolution
+-->
 
+### 暗黙の解決（Implicit Resolution）
+<!--
 We've discussed implicits a lot: this section is to clarify what
 implicits are and how they work.
+-->
+暗黙ということ概念は既に何度も出てきましたが、本節ではこの概念を深掘りし、これががどのように作用するのかということを明らかにします。
 
+<!--
 *Implicit parameters* are when a method requests that a unique
 instance of a particular type is in the *implicit scope* of the
 caller, with special syntax for typeclass instances. Implicit
 parameters are a clean way to thread configuration through an
 application.
+-->
+*暗黙パラメータ*は型クラスのインスタンスのための特別な構文で、メソッドの呼び出し元に
+*暗黙スコープ*内に特定の型の一意なインスタンスがあることを要求します。
+暗黙パラメータはアプリケーション全体に決まった設定を織り込むのに適した手法です。
 
+<!--
 In this example, `foo` requires that typeclass instances of `Numeric` and
 `Typeable` are available for `A`, as well as an implicit `Handler` object that
 takes two type parameters
+-->
+以下の例では、`foo`は`Numeric`と`Typeable`の`A`に対する型クラスがあることと、2つのパラメータを取る暗黙の`Handler`オブジェクト
+があることを要求します。
 
 {lang="text"}
 ~~~~~~~~
   def foo[A: Numeric: Typeable](implicit A: Handler[String, A]) = ...
 ~~~~~~~~
 
+<!--
 *Implicit conversion* is when an `implicit def` exists. One such use
 of implicit conversions is to enable extension methodology. When the
 compiler is resolving a call to a method, it first checks if the
 method exists on the type, then its ancestors (Java-like rules). If it
 fails to find a match, it will search the *implicit scope* for
 conversions to other types, then search for methods on those types.
+-->
+*暗黙変換（implicit conversion）*は暗黙関数（`implicit def`）が存在するときに発生します。
+暗黙変換の利用例の1つとして、方法論の拡張があります。コンパイラはメソッドの呼び出しを解決するときに、
+最初にその型にメソッドが存在するかどうかをチェックします。それから（Javaと同じように）親クラスのメソッドを
+辿っていきます。それから最後に`暗黙スコープ`の走査を行い、他の型に変換できるかどうかをチェックし、
+それらの型からメソッドを探します。
 
+<!--
 Another use for implicit conversions is *typeclass derivation*. In the
 previous section we wrote an `implicit def` that derived a
 `Numeric[Complex[T]]` if a `Numeric[T]` is in the implicit scope. It
-is possible to chain together many `implicit def` (including
+is possible to chain together many `ieplicit def` (including
 recursively) which is the basis of *typeful programming*, allowing for
 computations to be performed at compiletime rather than runtime.
+-->
+暗黙変換のもう1つの用例として、*型クラスの導出（typeclass derivation）*があります。前節で`Numeric[T]`が暗黙スコープ内に存在するときに
+`Numeric[Complex[T]]`を得ることができる`implicit def`を実装しました。
+`implicit def`は（再帰的な用法も含め）連鎖することができます。
+これは実行時ではなくコンパイル時に計算を行う*強く型付けされたプログラミング*の基礎となります。
 
+<!--
 The glue that combines implicit parameters (receivers) with implicit
 conversion (providers) is implicit resolution.
+-->
+暗黙パラメータ（レシーバ）と暗黙変換（プロバイダ）を仲介するのが暗黙解決（implicit resolution）です。
 
+<!--
 First, the normal variable scope is searched for implicits, in order:
 
 -   local scope, including scoped imports (e.g. the block or method)
@@ -3071,7 +3103,17 @@ First, the normal variable scope is searched for implicits, in order:
 -   the current package object
 -   ancestor package objects (when using nested packages)
 -   the file's imports
+-->
+まず、次のような順序で通常の変数のスコープから暗黙変数を探します。」
 
+- ブロックやメソッド内のインポートを含むローカルスコープ
+- クラス内のインポートや直接のインポートを含む外側のスコープ
+- クラスの祖先（親クラスのメンバーなど）
+- パッケージオブジェクト
+- 祖先のパッケージオブジェクト（ネストしたパッケージオブジェクト）
+- ファイルのインポート
+
+<!--
 If that fails to find a match, the special scope is searched, which
 looks for implicit instances inside a type's companion, its package
 object, outer objects (if nested), and then repeated for ancestors.
@@ -3080,31 +3122,63 @@ This is performed, in order, for the:
 -   given parameter type
 -   expected parameter type
 -   type parameter (if there is one)
+-->
+これらのスコープから暗黙変数を解決できなかった場合、特別なスコープの走査を行います。
+この走査では、型クラスのコンパニオンオブジェクト内の暗黙インスタンス、そのパッケージオブジェクトと
+ネストしたクラスの外側のクラスのコンパニオンオブジェクト、それらの祖先がスコープになります。
+このスコープの走査は以下のような順序で行われます。
 
+- 直接与えた型
+- 推論によって期待される型
+- 型パラメータ（型パラメータがある場合）
+
+<!--
 If two matching implicits are found in the same phase of implicit
 resolution, an *ambiguous implicit* error is raised.
+-->
+暗黙解決時にスコープ内に2つ以上合致する暗黙変数がある場合、*ambiguous implicit*というエラーが発生します。
 
+<!--
 Implicits are often defined on a `trait`, which is then extended by an
 object. This is to try and control the priority of an implicit
 relative to another more specific one, to avoid ambiguous implicits.
+-->
+暗黙の変数や関数は`trait`で定義してobjectがそれを拡張することがあります。
+このテクニックはより相対的に特化した暗黙変数を優先し、`ambiguous implicits`を避けるためにしばしば使用されます。
 
+<!--
 The Scala Language Specification is rather vague for corner cases, and
 the compiler implementation is the *de facto* standard. There are some
 rules of thumb that we will use throughout this book, e.g. prefer
 `implicit val` over `implicit object` despite the temptation of less
 typing. It is a [quirk of implicit resolution](https://github.com/scala/bug/issues/10411) that `implicit object` on
 companion objects are not treated the same as `implicit val`.
+-->
+Scalaの言語仕様は暗黙変数のコーナーケースに対して曖昧で、コンパイラが*事実上の*標準になっています。
+この問題に対して、この本を通して使う経験則がいくつかあります。
+例えば、タイピングの量がより少ない`implicit object`よりも`implicit val`を使う方が好ましいです。
+`implicit object`が`implicit val`と同じように扱われないという問題については[暗黙解決に関する奇妙なこと（quirk of implicit resolution）](https://github.com/scala/bug/issues/10411)というIssueを確認してください。
 
+<!--
 Implicit resolution falls short when there is a hierarchy of typeclasses, like
 `Ordering` and `Numeric`. If we write a function that takes an implicit
 `Ordering`, and we call it for a primitive type which has an instance of
 `Numeric` defined on the `Numeric` companion, the compiler will fail to find it.
+-->
+暗黙解決は`Ordering`と`Numeric`のように型クラスに階層がある場合に上手く動作しないことがあります。
+例えば、`Ordering`を型パラメータに取る関数を定義して、`Numeric`のコンパニオンオブジェクトに型クラスのインスタンスを定義しても、
+コンパイラはそれを見つけることができません。
 
+<!--
 Implicit resolution is particularly hit-or-miss [if type aliases are used](https://github.com/scala/bug/issues/10582) where
 the *shape* of the implicit parameters are changed. For example an implicit
 parameter using an alias such as `type Values[A] = List[Option[A]]` will
 probably fail to find implicits defined as raw `List[Option[A]]` because the
 shape is changed from a *thing of things* of `A` to a *thing* of `A`.
+-->
+暗黙解決は型エイリアスを使用して[暗黙パラメータの型の*形状（shape）*が変化しうる場合]((https://github.com/scala/bug/issues/10582))、特に一か八かという話になってしまいます。
+例えば、型エイリアス使って`type Values[A] = List[Option[A]]`という型を宣言しているとき、`List[Option[A]]`という生の型に依存した
+暗黙解決は、型の形状*あるモノのあるモノのA*から*あるモノのA*に変化しているため、失敗してしまうでしょう。
 
 
 ## Modelling OAuth2

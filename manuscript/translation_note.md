@@ -36,3 +36,4 @@
 | products | 積 | Data and Functionality / Data | - |
 | coproducts | 余積 | Data and Functionality / Data | - |
 | typeclass coherence | 型クラスの論理一貫性 | Data and Functionality / Functionality | - |
+| typeful programming | 強く型付けされたプログラミング | Data and Functionality / Functionality | - |
