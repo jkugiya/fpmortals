@@ -3083,7 +3083,7 @@ is possible to chain together many `ieplicit def` (including
 recursively) which is the basis of *typeful programming*, allowing for
 computations to be performed at compiletime rather than runtime.
 -->
-暗黙変換のもう1つの用例として、*型クラスの導出（typeclass derivation）*があります。前節で`Numeric[T]`が暗黙スコープ内に存在するときに
+暗黙変換のもう1つの用例として、*型クラス導出（typeclass derivation）*があります。前節で`Numeric[T]`が暗黙スコープ内に存在するときに
 `Numeric[Complex[T]]`を得ることができる`implicit def`を実装しました。
 `implicit def`は（再帰的な用法も含め）連鎖することができます。
 これは実行時ではなくコンパイル時に計算を行う*強く型付けされたプログラミング*の基礎となります。
@@ -3180,34 +3180,54 @@ shape is changed from a *thing of things* of `A` to a *thing* of `A`.
 例えば、型エイリアス使って`type Values[A] = List[Option[A]]`という型を宣言しているとき、`List[Option[A]]`という生の型に依存した
 暗黙解決は、型の形状*あるモノのあるモノのA*から*あるモノのA*に変化しているため、失敗してしまうでしょう。
 
-
+<!--
 ## Modelling OAuth2
-
+-->
+## OAuth2をモデリングする
+<!--
 We will finish this chapter with a practical example of data modelling
 and typeclass derivation, combined with algebra / module design from
 the previous chapter.
+-->
+それでは、データのモデリングと型クラス導出の実践的な例でこの章を締めくくりましょう。 前章から引き続いて、代数とモジュールの設計も組み合わせます。
 
+<!--
 In our `drone-dynamic-agents` application, we must communicate with Drone and
 Google Cloud using JSON over REST. Both services use [OAuth2](https://tools.ietf.org/html/rfc6749) for authentication.
 There are many ways to interpret OAuth2, but we will focus on the version that
 works for Google Cloud (the Drone version is even simpler).
+-->
+`drone-dynamic-agents`では、DroneとGoogle CloudがREST APIを通じてJSONのやり取りを行います。
+どちらのサービスも認証に[OAuth2](https://tools.ietf.org/html/rfc6749)を使用します。
+OAuth2の導入方法は沢山ありますが、ここではGoogle Cloudで動作するもののみに焦点を当てます。（Droneのものはもっと単純です。）
 
-
+<!--
 ### Description
-
+-->
+### 説明
+<!--
 Every Google Cloud application needs to have an *OAuth 2.0 Client Key*
 set up at
+-->
+全てのGoogle Cloudアプリケーションは以下で設定できる*OAuth 2.0 Client Key*を持つ必要があります。
 
 {lang="text"}
 ~~~~~~~~
   https://console.developers.google.com/apis/credentials?project={PROJECT_ID}
 ~~~~~~~~
-
+<!--
 Obtaining a *Client ID* and a *Client secret*.
+-->
+そして、*Client ID*と*Client secret*を取得します。
 
+<!--
 The application can then obtain a one time *code* by making the user
 perform an *Authorization Request* in their browser (yes, really, **in
 their browser**). We need to make this page open in the browser:
+-->
+これで、アプリケーションはユーザからブラウザを通じて*Authorization Request*を受け取ったときに一度限りの*code*という値を得られるようになります。
+（**ブラウザを通じて**、というところが重要です。）
+このため、以下のページをブラウザで開く必要があります。
 
 {lang="text"}
 ~~~~~~~~
@@ -3220,11 +3240,18 @@ their browser**). We need to make this page open in the browser:
     client_id={CLIENT_ID}
 ~~~~~~~~
 
+<!--
 The *code* is delivered to the `{CALLBACK_URI}` in a `GET` request. To
 capture it in our application, we need to have a web server listening
 on `localhost`.
+-->
+*code*の値は`{CALLBACK=URI}`に指定したURIに`GET`リクエストを通じて渡されます。
+これをアプリケーションで補足するために、`localhost`のWEBサーバーで待ち受ける必要があります。
 
+<!--
 Once we have the *code*, we can perform an *Access Token Request*:
+-->
+*code*を受け取ったら、*Access Token Request*を行います。
 
 {lang="text"}
 ~~~~~~~~
@@ -3240,8 +3267,10 @@ Once we have the *code*, we can perform an *Access Token Request*:
     scope={SCOPE}&\
     grant_type=authorization_code
 ~~~~~~~~
-
+<!--
 which gives a JSON response payload
+-->
+この応答として、以下のJSONを受け取ります。
 
 {lang="text"}
 ~~~~~~~~
@@ -3252,9 +3281,11 @@ which gives a JSON response payload
     "refresh_token": "REFRESH_TOKEN"
   }
 ~~~~~~~~
-
+<!--
 *Bearer tokens* typically expire after an hour, and can be refreshed
 by sending an HTTP request with any valid *refresh token*:
+-->
+*Bearer tokens*は通常1時間後に無効になりますが、有効な*refresh token*を持つHTTPリクエストを送信することで更新できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -3268,8 +3299,10 @@ by sending an HTTP request with any valid *refresh token*:
     refresh_token={REFRESH_TOKEN}&
     client_id={CLIENT_ID}
 ~~~~~~~~
-
+<!--
 responding with
+-->
+この応答は以下のとおりです。
 
 {lang="text"}
 ~~~~~~~~
@@ -3280,24 +3313,39 @@ responding with
   }
 ~~~~~~~~
 
+<!--
 All userland requests to the server should include the header
+-->
+サーバに送信する全てのユーザリクエストは以下のヘッダを含む必要があります。
 
 {lang="text"}
 ~~~~~~~~
   Authorization: Bearer BEARER_TOKEN
 ~~~~~~~~
-
+<!--
 after substituting the actual `BEARER_TOKEN`.
+-->
+`BEARER_TOKEN`の部分は実際の値に置き換えてください。
 
+<!--
 Google expires all but the most recent 50 *bearer tokens*, so the
 expiry times are just guidance. The *refresh tokens* persist between
 sessions and can be expired manually by the user. We can therefore
 have a one-time setup application to obtain the refresh token and then
 include the refresh token as configuration for the user's install of
 the headless server.
+-->
+Googleは直近の概ね50%の*bearer tokens*を無効にするため、有効期限はただの目安です。
+*refresh tokens*はセッション間で再利用することができ、ユーザが手動で無効にすることができます。
+このため、リフレッシュトークンを取得するための一度限りのセットアップアプリケーションを作ることできます。
+その後、リフレッシュトークンはユーザがヘッドレスサーバーをインストールする時に設定に含めるようにします。
 
+<!--
 Drone doesn't implement the `/auth` endpoint, or the refresh, and simply
 provides a `BEARER_TOKEN` through their user interface.
+-->
+Droneには`/auth`エンドポイントやリフレッシュの機能はありません。
+ユーザインターフェースから`BEARER_TOKEN`を設定するだけです。
 
 
 ### Data
