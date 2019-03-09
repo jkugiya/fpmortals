@@ -2093,7 +2093,7 @@ A clean way to restrict the values of a general type is with the `refined`
 library, providing a suite of restrictions to the contents of data. To install
 refined, add the following to `build.sbt`
 -->
-一般的な型の値を制限する上手なやり方は、*refined（洗練された）*ライブラリを使って、データの内容に一連の制限を設けることです。
+一般的な型の値を制限する上手なやり方は、*refined*というライブラリを使って、データの内容に一連の制限を設けることです。
 それでは、`build.sbt`に`refiend`ライブラリを追加してみましょう。
 
 {lang="text"}
@@ -3347,13 +3347,19 @@ provides a `BEARER_TOKEN` through their user interface.
 Droneには`/auth`エンドポイントやリフレッシュの機能はありません。
 ユーザインターフェースから`BEARER_TOKEN`を設定するだけです。
 
-
+<!--
 ### Data
-
+-->
+### データ
+<!--
 The first step is to model the data needed for OAuth2. We create an ADT with
 fields having exactly the same name as required by the OAuth2 server. We will
 use `String` and `Long` for brevity, but we could use refined types if they leak
 into our business models.
+-->
+まず手始めに、OAuth2のサーバーで必要なパラメータと同じ名前のフィールドを持つ抽象データ型を作成し、
+OAuth2に必要なデータモデルを設計します。各フィールドは簡潔に`String`や`Long`を使用しますが、
+それらがビジネスモデルを上手く反映できない場合は、洗練されたデータ型を使用します。
 
 {lang="text"}
 ~~~~~~~~
@@ -3395,32 +3401,61 @@ into our business models.
   )
 ~~~~~~~~
 
+<!--
 W> Avoid using `java.net.URL` at all costs: it uses DNS to resolve the
 W> hostname part when performing `toString`, `equals` or `hashCode`.
+-->
+W> `java.net.URL`はコストが高いので使用しないようにしましょう。`java.net.URL`は、`toString`、`equals`、`hashCode`
+W> といったメソッドの呼び出しを行った時にDNSを使ってホスト名の解決を試みます。
 W> 
-W> Apart from being insane, and **very very** slow, these methods can throw
+<!--
+W> Apart from being insane, and **very very** slow, these methods can throW
 W> I/O exceptions (are not *pure*), and can change depending on the
 W> network configuration (are not *deterministic*).
-W> 
+-->
+W> 妙な振る舞いをすることは*とてつもなく*遅いということを別としても、このメソッドはI/O例外を送出することがあり（これは*純粋*ではない）、
+W> ネットワークの設定によって振る舞いが変わります。（これは*決定的*ではない） 
+W>
+<!--
 W> The refined type `String Refined Url` allows us to perform equality checks based
 W> on the `String` and we can safely construct a `URL` only if it is needed by a
 W> legacy API.
+-->
+W> 洗練されたデータ型`String Refined Url`を使用すると、等価性の評価を`String`ベースで行うことができます。
+W> このため、`java.net.URL`はレガシーなAPIによって必要とされるときのみ生成すればよくなります。
 W> 
+<!--
 W> That said, in high performance code we would prefer to skip `java.net.URL`
 W> entirely and use a third party URL parser such as [jurl](https://github.com/anthonynsimon/jurl), because even the safe
 W> parts of `java.net.*` are extremely slow at scale.
+-->
+W> `java.net.*`パッケージは安全な部分であっても非常に遅いため、パフォーマンスが要求されるコードでは、
+W> このように`java.net.URL`の使用を避け、[jurl](https://github.com/anthonynsimon/jurl)
+W> のようなサードパーティ製のライブラリを使用すると良いでしょう。
 
-
+<!--
 ### Functionality
+-->
+### 機能性
 
+<!--
 We need to marshal the data classes we defined in the previous section into
 JSON, URLs and POST-encoded forms. Since this requires polymorphism, we will
 need typeclasses.
+-->
+前節で定義したデータクラスは、JSONやURL、POSTのフォームデータなどに変換する必要があります。
+これには多態性が必要なので、型クラスを使用します。
 
+<!--
 [`jsonformat`](https://github.com/scalaz/scalaz-deriving/tree/master/examples/jsonformat/src) is a simple JSON library that we will study in more detail in a
 later chapter, as it has been written with principled FP and ease of readability
 as its primary design objectives. It consists of a JSON AST and encoder /
 decoder typeclasses:
+-->
+[`jsonformat`](https://github.com/scalaz/scalaz-deriving/tree/master/examples/jsonformat/src)は
+関数型プログラミングの原則に沿って書かれており、読みやすさに重点をおいたシンプルなJSONライブラリです。
+このライブラリについては後の章で詳しく扱います。
+このライブラリの主要概念は、以下の抽象構文木、エンコーダ、デコーダです。
 
 {lang="text"}
 ~~~~~~~~
@@ -3444,16 +3479,28 @@ decoder typeclasses:
   }
 ~~~~~~~~
 
+<!--
 A> `\/` is Scalaz's `Either` and has a `.flatMap`. We can use it in `for`
 A> comprehensions, whereas stdlib `Either` does not support `.flatMap` prior to
 A> Scala 2.12. It is spoken as *disjunction*, or *angry rabbit*.
-A> 
+-->
+A> `\/`はScalazの`Either`で`.flatMap`を呼び出せます。
+A> Scala2.12より前の標準ライブラリの`Either`は`.flatMap`をサポートしていませんが、
+A> こちらは`.flatMap`があるので`for`内包表記を使うことができます。
+A> この記号は*disjunction（論理）*や*angry rabbit（怒ったウサギ）*と読みます。
+<!--
 A> `scala.Either` was [contributed to
 A> the Scala standard library](https://issues.scala-lang.org/browse/SI-250) by the creator of Scalaz, Tony Morris, in 2007.
 A> `\/` was created when unsafe methods were added to `Either`.
+-->
+A> `scala.Either`は2007年に[作成され](https://issues.scala-lang.org/browse/SI-250)、その作者はScalazを作ったトニー・モリスです。
 
+<!--
 We need instances of `JsDecoder[AccessResponse]` and `JsDecoder[RefreshResponse]`.
 We can do this by making use of a helper function:
+-->
+まず、`JsDecoder[AccessResponse]`と`JsDecoder[RefreshResponse]`のインスタンスが必要なので、
+そのためのヘルパー関数を作ります。
 
 {lang="text"}
 ~~~~~~~~
@@ -3462,8 +3509,12 @@ We can do this by making use of a helper function:
   }
 ~~~~~~~~
 
+<!--
 We put the instances on the companions of our data types, so that they are
 always in the implicit scope:
+-->
+エンコーダとデコーダのインスタンスは、各データ型のコンパニオンオブジェクトに配置します。
+こうすることで、インスタンスを暗黙スコープに加えることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -3489,7 +3540,10 @@ always in the implicit scope:
   }
 ~~~~~~~~
 
+<!--
 We can then parse a string into an `AccessResponse` or a `RefreshResponse`
+-->
+これで文字列を`AccessResponse`や`RefreshResponse`に変換できるようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -3506,9 +3560,12 @@ We can then parse a string into an `AccessResponse` or a `RefreshResponse`
   scala> json.map(_.as[AccessResponse])
   AccessResponse(BEARER_TOKEN,Bearer,3600,REFRESH_TOKEN)
 ~~~~~~~~
-
+<!--
 We need to write our own typeclasses for URL and POST encoding. The
 following is a reasonable design:
+-->
+URLやPOSTのフォームデータのエンコードの場合、自分で型クラスを書く必要があります。
+設計としては、以下のようにすると良いでしょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -3523,8 +3580,10 @@ following is a reasonable design:
     def toUrlEncoded(a: A): String Refined UrlEncoded
   }
 ~~~~~~~~
-
+<!--
 We need to provide typeclass instances for basic types:
+-->
+そして、基本データ型に対する型クラスを提供します。
 
 {lang="text"}
 ~~~~~~~~
@@ -3550,12 +3609,20 @@ We need to provide typeclass instances for basic types:
   }
 ~~~~~~~~
 
+<!--
 We use `Refined.unsafeApply` when we can logically deduce that the contents of
 the string are already url encoded, bypassing any further checks.
+-->
+文字列が既にURLエンコードされていると論理的に推測できる場合は、`Refined.unsafeApply`を使用して
+無用なチェックをスキップします。
 
+<!--
 `ilist` is an example of simple typeclass derivation, much as we derived
 `Numeric[Complex]` from the underlying numeric representation. The
 `.intercalate` method is like `.mkString` but more general.
+-->
+`ilist`は、基となる数値表現から`Numeric[Complex]`を導いたのと同じ、型クラス導出の例です。
+`.intercalate`は`.mkString`と似ていますが、より一般的な意味を持ちます。
 
 A> `UrlEncodedWriter` is making use of the *Single Abstract Method* (SAM types)
 A> Scala language feature. The full form of the above is
