@@ -3444,7 +3444,7 @@ JSON, URLs and POST-encoded forms. Since this requires polymorphism, we will
 need typeclasses.
 -->
 前節で定義したデータクラスは、JSONやURL、POSTのフォームデータなどに変換する必要があります。
-これには多態性が必要なので、型クラスを使用します。
+このような多態性が必要な場合、型クラスを使うとよいでしょう。
 
 <!--
 [`jsonformat`](https://github.com/scalaz/scalaz-deriving/tree/master/examples/jsonformat/src) is a simple JSON library that we will study in more detail in a
@@ -3513,8 +3513,7 @@ We can do this by making use of a helper function:
 We put the instances on the companions of our data types, so that they are
 always in the implicit scope:
 -->
-エンコーダとデコーダのインスタンスは、各データ型のコンパニオンオブジェクトに配置します。
-こうすることで、インスタンスを暗黙スコープに加えることができます。
+エンコーダとデコーダのインスタンスは、各データ型のコンパニオンオブジェクトに配置すると、それらのインスタンスを暗黙スコープに加えることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -3564,7 +3563,7 @@ We can then parse a string into an `AccessResponse` or a `RefreshResponse`
 We need to write our own typeclasses for URL and POST encoding. The
 following is a reasonable design:
 -->
-URLやPOSTのフォームデータのエンコードの場合、自分で型クラスを書く必要があります。
+URLやPOSTのフォームデータの型クラスも自分で書く必要があります。
 設計としては、以下のようにすると良いでしょう。
 
 {lang="text"}
@@ -3624,9 +3623,12 @@ the string are already url encoded, bypassing any further checks.
 `ilist`は、基となる数値表現から`Numeric[Complex]`を導いたのと同じ、型クラス導出の例です。
 `.intercalate`は`.mkString`と似ていますが、より一般的な意味を持ちます。
 
+<!--
 A> `UrlEncodedWriter` is making use of the *Single Abstract Method* (SAM types)
 A> Scala language feature. The full form of the above is
-A> 
+-->
+A> `UrlEncodedWriter`のインスタンスの定義には*単一抽象メソッド（Simple Abstract Method, SAM types）*というScalaの言語機能を利用しています。
+A> `string`を省略せずに書くと以下のようになります。
 A> {lang="text"}
 A> ~~~~~~~~
 A>   implicit val string: UrlEncodedWriter[String] =
@@ -3635,12 +3637,18 @@ A>       override def toUrlEncoded(s: String): String = ...
 A>     }
 A> ~~~~~~~~
 A> 
+<!--
 A> When the Scala compiler expects a class (which has a single abstract
 A> method) but receives a lambda, it fills in the boilerplate
 A> automatically.
-A> 
+-->
+A> Scalaのコンパイラは、型として（1つだけメソッドを持つ）クラスを期待しているところでラムダを受け取ると自動的にボイラープレートを解決します。
+A>
+<!--
 A> Prior to SAM types, a common pattern was to define a method named
 A> `instance` on the typeclass companion
+-->
+A> SAMという機能が登場する前は、型クラスのコンパニオンオブジェクトの中に`instance`という名前のメソッドを定義するのがお決まりでした。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -3650,25 +3658,39 @@ A>       override def toUrlEncoded(t: T): String = f(t)
 A>     }
 A> ~~~~~~~~
 A> 
+<!--
 A> allowing for
+-->
+A> これを使って`string`を実装すると以下のようになります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
 A>   implicit val string: UrlEncodedWriter[String] = instance { s => ... }
 A> ~~~~~~~~
 A> 
+<!--
 A> This pattern is still used in code that must support older versions of
 A> Scala, or for typeclasses instances that need to provide more than one
 A> method.
+-->
+A> この実装パターンは古いバージョンのScalaをサポートする必要があるコードや、複数のメソッドを持つ必要のある型クラスのインスタンスを定義する場合は、
+A> 今でも有効なテクニックです。
 A> 
+<!--
 A> Note that there are a lot of bugs around SAM types, as they do not interact with
 A> all the language features. Revert to the non-SAM variant if there are any
 A> strange compiler crashes.
+-->
+A> SAM typesにはたくさんのバグがあることには注意が必要です。SAM typesは全ての言語機能とやり取りできるわけではありません。
 
+<!--
 In a dedicated chapter on *Typeclass Derivation* we will calculate instances of
 `UrlQueryWriter` automatically, as well as clean up what
 we have already written, but for now we will write the boilerplate for the types
 we wish to convert:
+-->
+*型クラス導出*をより掘り下げていく章では、`UrlQueryWriter`のインスタンスを自動的に算出する方法で今のコードを置き換えていきますが、
+ここではひとまず、ボイラプレートを使って型を記述します。
 
 {lang="text"}
 ~~~~~~~~
