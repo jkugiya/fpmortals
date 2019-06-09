@@ -3730,17 +3730,27 @@ we wish to convert:
   }
 ~~~~~~~~
 
-
+<!--
 ### Module
-
+-->
+### モジュール
+<--
 That concludes the data and functionality modelling required to implement
 OAuth2. Recall from the previous chapter that we define components that need to
 interact with the world as algebras, and we define business logic in a module,
 so it can be thoroughly tested.
+-->
+以上でOAuth2を実装するために必要なデータと機能のモデル化は終わりです。前章で説明したように、
+世界と対話する必要のあるコンポーネントを代数として定義し、ビジネスロジックをモジュールとして定義することで
+テストを実装しやすくなります。
 
+<!--
 We define our dependency algebras, and use context bounds to show that our
 responses must have a `JsDecoder` and our `POST` payload must have a
 `UrlEncodedWriter`:
+-->
+まず、依存代数を定義し、コンテキスト・バインドを使って応答の型には`JsDecoder`、POSTのペイロードには
+`UrlEncodedWriter`が型クラスのインスタンスとして必要であることを表現します。
 
 {lang="text"}
 ~~~~~~~~
@@ -3758,17 +3768,29 @@ responses must have a `JsDecoder` and our `POST` payload must have a
   }
 ~~~~~~~~
 
+<!--
 Note that we only define the happy path in the `JsonClient` API. We will get
 around to error handling in a later chapter.
+-->
+この`JsonClient`のAPIは正常経路しか表現できていないことには注意してください。
+エラーの処理については後の章で説明します。
 
+<!--
 Obtaining a `CodeToken` from the Google `OAuth2` server involves
+-->
+Googleの`OAuth2`サーバーから`CodeToken`を取得する手順は以下のようになります。
 
+<!--
 1.  starting an HTTP server on the local machine, and obtaining its port number.
 2.  making the user open a web page in their browser, which allows them to log in
     with their Google credentials and authorise the application, with a redirect
     back to the local machine.
 3.  capturing the code, informing the user of next steps, and closing the HTTP
     server.
+-->
+1. ローカルマシン上でHTTPサーバーを起動し、そのポート番号を控えておきます。
+2. ユーザーがWEBページを開いて、Google認証を使ってログインし、ローカルマシンにリダイレクトしてアプリケーションを認証できるようにする。
+3. Googleから送信されたコードをキャプチャし、次のステップをユーザーに示した上でHTTPサーバーを閉じます。
 
 We can model this with three methods on a `UserInteraction` algebra.
 
