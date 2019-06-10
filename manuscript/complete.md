@@ -3792,7 +3792,10 @@ Googleの`OAuth2`サーバーから`CodeToken`を取得する手順は以下の�
 2. ユーザーがWEBページを開いて、Google認証を使ってログインし、ローカルマシンにリダイレクトしてアプリケーションを認証できるようにする。
 3. Googleから送信されたコードをキャプチャし、次のステップをユーザーに示した上でHTTPサーバーを閉じます。
 
+<!--
 We can model this with three methods on a `UserInteraction` algebra.
+-->
+`UserInteraction`という代数を使って、これら3つのメソッドを表現します。
 
 {lang="text"}
 ~~~~~~~~
@@ -3805,9 +3808,15 @@ We can model this with three methods on a `UserInteraction` algebra.
   }
 ~~~~~~~~
 
+<!--
 It almost sounds easy when put like that.
+-->
+ほとんどの人は一見簡単であるように思うでしょう。
 
+<!--
 We also need an algebra to abstract over the local system time
+-->
+さらに、ローカルのシステム時間を表現するための代数が必要です。
 
 {lang="text"}
 ~~~~~~~~
@@ -3816,7 +3825,10 @@ We also need an algebra to abstract over the local system time
   }
 ~~~~~~~~
 
+<!--
 And introduce data types that we will use in the refresh logic
+-->
+トークンをリフレッシュするのに必要なデータ型も定義しておきます。
 
 {lang="text"}
 ~~~~~~~~
@@ -3832,7 +3844,10 @@ And introduce data types that we will use in the refresh logic
   final case class BearerToken(token: String, expires: Epoch)
 ~~~~~~~~
 
+<!--
 Now we can write an OAuth2 client module:
+-->
+これでOAuth2のクライアントモジュールを作れるようになりました。
 
 {lang="text"}
 ~~~~~~~~
@@ -3881,9 +3896,11 @@ Now we can write an OAuth2 client module:
   }
 ~~~~~~~~
 
-
+<!--
 ## Summary
-
+-->
+## まとめ
+<!--
 -   *algebraic data types* (ADTs) are defined as *products* (`final case class`)
     and *coproducts* (`sealed abstract class`).
 -   `Refined` types enforce constraints on values.
@@ -3896,7 +3913,14 @@ Now we can write an OAuth2 client module:
     convenient syntax for typeclass functions.
 -   *typeclass derivation* is compiletime composition of typeclass
     instances.
-
+-->
+-   *代数的データ型（ADTs）*は*積*（`final case class`）と*余積*（`sealed abstract class`）で定義します。
+-   `Refined`は値に制約を課す型です。
+-   `implicit class`にメソッドを実装することで左から右にコードを読む流れを維持できます。
+-   `型クラス`には多相関数を定義します。クラスの継承関係を使った場合、サブクラス1つにつき1つの実装しか与えることができません（is a）が、コンテキスト・バインドの場合、型に応じた実装を選択できます。（has a）
+-   型クラスの*インスタンス*とは、型クラスの実装のことです。
+-   `@simulacrum.typeclass`アノテーションは`.ops`というコンパニオンを生成し、型クラスの関数にとって便利な文法を提供します。
+-   `型クラス導出`によってコンパイル時に型クラスのインスタンスが決まります。
 
 # Scalaz Typeclasses
 
