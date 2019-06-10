@@ -3922,17 +3922,26 @@ Now we can write an OAuth2 client module:
 -   `@simulacrum.typeclass`アノテーションは`.ops`というコンパニオンを生成し、型クラスの関数にとって便利な文法を提供します。
 -   `型クラス導出`によってコンパイル時に型クラスのインスタンスが決まります。
 
+<!--
 # Scalaz Typeclasses
+-->
+# Scalazの型クラス
+<!--
+In this chapter we will tour most of the typeclasses in `scalaz-core`. We don't use everything in `drone-dynamic-agents` so we will give standalone examples when appropriate.
+-->
+この章では、`scalaz-core`の型クラスを見ていきます。`drone-dynamic-agents`では、これらの型クラスをすべて使うわけではないので、
+必要に応じてそれとは別の例も例示します。
 
-In this chapter we will tour most of the typeclasses in `scalaz-core`.
-We don't use everything in `drone-dynamic-agents` so we will give
-standalone examples when appropriate.
-
+<!--
 There has been criticism of the naming in Scalaz, and functional programming in
 general. Most names follow the conventions introduced in the Haskell programming
 language, based on *Category Theory*. Feel free to set up `type` aliases if
 verbs based on the primary functionality are easier to remember when learning
 (e.g. `Mappable`, `Pureable`, `FlatMappable`).
+-->
+Scalazにおける命名や関数型プログラミング一般には批判もあります。ほとんどの名前は*圏論*に基づいたHaskellに導入された規則を参考にしています。
+基本的に動詞を用いる命名の方がわかりやすい、という場合は、型エイリアスを使うようにするとよいでしょう。（例えば、`Mappable`、`Pureable`、`FlatMappable`など）
+
 
 Before we introduce the typeclass hierarchy, we will peek at the four
 most important methods from a control flow perspective: the methods we
