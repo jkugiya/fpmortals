@@ -3942,10 +3942,13 @@ verbs based on the primary functionality are easier to remember when learning
 Scalazにおける命名や関数型プログラミング一般には批判もあります。ほとんどの名前は*圏論*に基づいたHaskellに導入された規則を参考にしています。
 基本的に動詞を用いる命名の方がわかりやすい、という場合は、型エイリアスを使うようにするとよいでしょう。（例えば、`Mappable`、`Pureable`、`FlatMappable`など）
 
-
+<!--
 Before we introduce the typeclass hierarchy, we will peek at the four
 most important methods from a control flow perspective: the methods we
 will use the most in typical FP applications:
+-->
+型のヒエラルキーについて詳しく見ていく前に、制御フローを作る上で最も重要な4つのメソッドについて抑えておきましょう。
+関数型プログラミングではこれらのメソッドを利用する頻度が極めて高いです。
 
 | Typeclass     | Method     | From      | Given       | To        |
 |------------- |---------- |--------- |----------- |--------- |
@@ -3954,31 +3957,55 @@ will use the most in typical FP applications:
 | `Monad`       | `flatMap`  | `F[A]`    | `A => F[B]` | `F[B]`    |
 | `Traverse`    | `sequence` | `F[G[A]]` |             | `G[F[A]]` |
 
+<!--
 We know that operations which return a `F[_]` can be run sequentially
 in a `for` comprehension by `.flatMap`, defined on its `Monad[F]`. The
 context `F[_]` can be thought of as a container for an intentional
 *effect* with `A` as the output: `flatMap` allows us to generate new
 effects `F[B]` at runtime based on the results of evaluating previous
 effects.
+-->
+既に、`Monado[F]`に定義された`.flatMap`というメソッドを使用することで`for`内包表記を使った逐次処理を記述し
+`F[_]`を得ることができることはお分かりですね。`F[_]`のコンテキストは、何らかの*作用*を伴って`A`を出力するコンテナと
+考えることができます。`flatMap`を使うと、それより前の作用の結果に基づいて実行時に新しい`F[B]`という作用を起こすことができます。
 
+<!--
 Of course, not all type constructors `F[_]` are effectful, even if
 they have a `Monad[F]`. Often they are data structures. By using the
 least specific abstraction, we can reuse code for `List`, `Either`,
 `Future` and more.
+-->
+もちろん、全ての型コンストラクタ`F[_]`が、`Monad[F]`のインスタンスを持っているからといって必ず作用を伴うわけではありません。
+型コンストラクタはデータ構造を表していることがしばしばあります。
+最小限の抽象を用いることで、`List`、`Either`、`Future`といったコードに再利用することができます。
 
+<!--
 If we only need to transform the output from an `F[_]`, that is just
 `map`, introduced by `Functor`. In Chapter 3, we ran effects in
 parallel by creating a product and mapping over them. In Functional
 Programming, parallelisable computations are considered **less**
 powerful than sequential ones.
+-->
+`F[_]`からの出力を単に変換したい場合は`Functor`が持つ`map`を使用します。
+第3章では、積（何らかの`case class`）を生成してからその写像を使って計算結果を得る（map）というタスクを
+並列実行を行う作用を使って実行しました。関数型プログラミングでは、並列計算は逐次的な計算よりも*抽象度が低く*強力ではない、と考えます。
 
+<!--
 In between `Monad` and `Functor` is `Applicative`, defining `pure`
 that lets us lift a value into an effect, or create a data structure
 from a single value.
+-->
+`Monad`と`Functor`はいずれも`Applicative`であり、`pure`というメソッドを使って値が作用を持つように持ち上げたり、
+1つの値からデータ構造を生成したりできます。
 
+<!--
 `.sequence` is useful for rearranging type constructors. If we have an `F[G[_]]`
 but need a `G[F[_]]`, e.g. `List[Future[Int]]` but need a `Future[List[Int]]`,
 that is `.sequence`.
+-->
+`.sequence`は型コンストラクタの入れ替えに便利なメソッドです。
+例えば、`List[Future[Int]]`を`Future[List[Int]]`に変換する、といったように`F[G[_]]`という型を
+`G[F[_]]`という型に変換したい場合に利用できます。
 
 
 ## Agenda
