@@ -4007,21 +4007,33 @@ that is `.sequence`.
 例えば、`List[Future[Int]]`を`Future[List[Int]]`に変換する、といったように`F[G[_]]`という型を
 `G[F[_]]`という型に変換したい場合に利用できます。
 
-
+<!--
 ## Agenda
-
+-->
+## アジェンダ
+<!--
 This chapter is longer than usual and jam-packed with information: it is
 perfectly reasonable to attack it over several sittings. Remembering everything
 would require super-human powers, so treat this chapter as a way of knowing
 where to look for more information.
+-->
+この章は他の章と比べて様々な話題があるので、それぞれの話題ごとにじっくり考える時間を持つと良いでしょう。
+一度で全てを覚えることは普通の人にはできないと思われるので、この章はそれらを深掘りしていくための手掛かりを読者に与えることに注力します。
 
+<!--
 Notably absent are typeclasses that extend `Monad`. They get their own chapter
 later.
+-->
+特に`Monad`を拡張する型クラスに関する説明には不足があります。この点については別途、章を設けて説明します。
 
+<!--
 Scalaz uses code generation, not simulacrum. However, for brevity, we present
 code snippets with `@typeclass`. Equivalent syntax is available when we `import
 scalaz._, Scalaz._` and is available under the `scalaz.syntax` package in the
 scalaz source code.
+-->
+Scalazはsimulacrumによるコード生成を行っていませんが、簡潔に書くため、本書のスニペットではsimulacrumの`@typeclass`アノテーションを使用します。
+同等の構文は、`import scalaz._, Scalaz._`というインポートをしたときや、`scalaz.syntax`パッケージ以下で利用可能です。
 
 {width=100%}
 ![](images/scalaz-core-tree.png)
@@ -4032,8 +4044,10 @@ scalaz source code.
 {width=60%}
 ![](images/scalaz-core-loners.png)
 
-
+<!--
 ## Appendable Things
+-->
+## 追記可能なこと
 
 {width=25%}
 ![](images/scalaz-semigroup.png)
@@ -4056,12 +4070,20 @@ scalaz source code.
   @typeclass trait Band[A] extends Semigroup[A]
 ~~~~~~~~
 
+<!--
 A> `|+|` is known as the TIE Fighter operator. There is an Advanced TIE
 A> Fighter in an upcoming section, which is very exciting.
+-->
+A> `|+|`はタイファイター演算子と呼ばれています。後でタイファイター演算子応用編という節で面白い話をします。
 
+<!--
 A `Semigroup` can be defined for a type if two values can be combined. The
 operation must be *associative*, meaning that the order of nested operations
 should not matter, i.e.
+-->
+`Semigroup`は2つの値を結合するための型クラスです。
+タイファイター演算子は`Semigroup`に対して用いることができる演算子で、`Semigroup`は*結合法則*が成り立ちます。
+つまり、括弧の位置を入れ替えたとしても同じ意味になります。
 
 {lang="text"}
 ~~~~~~~~
@@ -4070,8 +4092,12 @@ should not matter, i.e.
   (1 |+| 2) |+| 3 == 1 |+| (2 |+| 3)
 ~~~~~~~~
 
+<!--
 A `Monoid` is a `Semigroup` with a *zero* element (also called *empty*
 or *identity*). Combining `zero` with any other `a` should give `a`.
+-->
+`Monoid`は*zero*という要素を持つ`Semigroup`です。（*zero*は*empty*や*identity*と呼ぶこともあります。）
+`zero`と他の要素を結合したときに得られる結果は、その結合した要素です。
 
 {lang="text"}
 ~~~~~~~~
@@ -4080,9 +4106,13 @@ or *identity*). Combining `zero` with any other `a` should give `a`.
   a |+| 0 == a
 ~~~~~~~~
 
+<!--
 This is probably bringing back memories of `Numeric` from Chapter 4. There are
 implementations of `Monoid` for all the primitive numbers, but the concept of
 *appendable* things is useful beyond numbers.
+-->
+この辺りは、第4章で`Numeric`について考えるときに復習します。全てのプリミティブな数値について`Monoid`の実装がありますが、
+*追記可能*という概念は数値以外にも適用できます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4093,26 +4123,44 @@ implementations of `Monoid` for all the primitive numbers, but the concept of
   res: List[Int] = List(1, 2, 3, 4)
 ~~~~~~~~
 
+<!--
 `Band` has the law that the `append` operation of the same two
 elements is *idempotent*, i.e. gives the same value. Examples are
 anything that can only be one value, such as `Unit`, least upper
 bounds, or a `Set`. `Band` provides no further methods yet users can
 make use of the guarantees for performance optimisation.
+-->
+`Band`は同じ2つを`append`した時の結果が*冪等*（操作の結果が変わらない）であるという法則を持ちます。
+例えば、`Unit`のように持ちうる値が決まっている（上限を持つ）ものや`Set`のようなものを例として挙げられます。
+`Band`には他にユーザが利用できるメソッドはありませんが、ユーザはこの性質を利用してパフォーマンスを最適化できます。
 
+<!--
 A> Viktor Klang, of Lightbend fame, lays claim to the phrase
 A> [effectively-once delivery](https://twitter.com/viktorklang/status/789036133434978304) for message processing with idempotent
 A> operations, i.e. `Band.append`.
+-->
+A> Lightbend社の著名なエンジニアであるヴィクター・クランは冪等性をもつメッセージ処理の操作として、[effectively-once delivery](https://twitter.com/viktorklang/status/789036133434978304)というフレーズを使っていますが、これは`Band.append`の例と言えるでしょう。
 
+<!--
 As a realistic example for `Monoid`, consider a trading system that has a large
 database of reusable trade templates. Populating the default values for a new
 trade involves selecting and combining multiple templates, with a "last rule
 wins" merge policy if two templates provide a value for the same field. The
 "selecting" work is already done for us by another system, it is our job to
 combine the templates in order.
+-->
+`Monoid`のより実践的な例として、再利用可能な取引のテンプレートを巨大なデータベースに保持するトレーディングシステムを考えていきましょう。
+このシステムでは、新しい取引を行うときにテンプレートを適用してデフォルトの値を使用しますが、複数のテンプレートを組み合わせます。
+この時、2つのテンプレートが同一のフィールドを埋めるものであった場合、"最後に勝ったテンプレートを優先"というマージ戦略を適用します。
+適用するテンプレートの「選択」は他のシステムが行っているので、テンプレートをこの戦略に従って適用することが我々の仕事です。
 
+<!--
 We will create a simple template schema to demonstrate the principle,
 but keep in mind that a realistic system would have a more complicated
 ADT.
+-->
+原則のデモとして、簡単なスキーマを作成してみましょう。
+ただし、実際のシステムを作る場合は、もっと複雑な抽象データ型が必要だということは念頭に置いてください。
 
 {lang="text"}
 ~~~~~~~~
