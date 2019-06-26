@@ -4309,15 +4309,21 @@ A> Please don't break typeclass coherence at home, kids.
 -->
 A> 実際に型クラスを使う場合は、型クラスの一貫性を崩さないように注意してください。
 
-
+<!--
 ## Objecty Things
-
+-->
+## オブジェクト性
+<!--
 In the chapter on Data and Functionality we said that the JVM's notion
 of equality breaks down for many things that we can put into an ADT.
 The problem is that the JVM was designed for Java, and `equals` is
 defined on `java.lang.Object` whether it makes sense or not. There is
 no way to remove `equals` and no way to guarantee that it is
 implemented.
+-->
+データと機能という章で、JVMの等価性という概念は抽象データ型を表現したときに色んな所で壊れてしまうという話をしました。
+問題はJVMはJavaのために設計されていて、好むと好まざるとにかかわらず`java.lang.Object`に`equals`が定義されているということです。
+`equals`を実装から取り外したり、`equals`を必ず実装させる手段はありません。
 
 However, in FP we prefer typeclasses for polymorphic functionality and even the
 concept of equality is captured at compiletime.
