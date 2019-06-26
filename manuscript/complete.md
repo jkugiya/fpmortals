@@ -4047,7 +4047,7 @@ Scalazはsimulacrumによるコード生成を行っていませんが、簡潔�
 <!--
 ## Appendable Things
 -->
-## 追記可能なこと
+## 追記可能性
 
 {width=25%}
 ![](images/scalaz-semigroup.png)
@@ -4151,7 +4151,7 @@ combine the templates in order.
 -->
 `Monoid`のより実践的な例として、再利用可能な取引のテンプレートを巨大なデータベースに保持するトレーディングシステムを考えていきましょう。
 このシステムでは、新しい取引を行うときにテンプレートを適用してデフォルトの値を使用しますが、複数のテンプレートを組み合わせます。
-この時、2つのテンプレートが同一のフィールドを埋めるものであった場合、"最後に勝ったテンプレートを優先"というマージ戦略を適用します。
+この時、2つのテンプレートが同一のフィールドを埋めるものであった場合、"後のテンプレートを優先"というマージ戦略を適用します。
 適用するテンプレートの「選択」は他のシステムが行っているので、テンプレートをこの戦略に従って適用することが我々の仕事です。
 
 <!--
@@ -4174,9 +4174,11 @@ ADT.
     otc: Option[Boolean]
   )
 ~~~~~~~~
-
+<!--
 If we write a method that takes `templates: List[TradeTemplate]`, we
 only need to call
+-->
+`templates: List[TradeTemplate]`を受け取ってそれらを足し合わせるコードを実装すると、以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -4184,11 +4186,18 @@ only need to call
   templates.foldLeft(zero)(_ |+| _)
 ~~~~~~~~
 
+<!--
 and our job is done!
+-->
+簡潔に見えますよね？
 
+<!--
 But to get `zero` or call `|+|` we must have an instance of
 `Monoid[TradeTemplate]`. Although we will generically derive this in a
 later chapter, for now we will create an instance on the companion:
+-->
+ここで、`zero`を得たり`|+|`を呼び出したりするためには、`Monoid[TradeTemplate]`のインスタンスが必要です。
+後の章でもう少し一般化しますが、ここでは一旦コンパニオンオブジェクトにインスタンスを用意しておきます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4201,9 +4210,12 @@ later chapter, for now we will create an instance on the companion:
     )
   }
 ~~~~~~~~
-
+<!--
 However, this doesn't do what we want because `Monoid[Option[A]]` will append
 its contents, e.g.
+-->
+しかし、この実装は私達がここでやりたかったことととは少し違います。
+`Monoid[Option[A]]`は、以下のように、`Option`の中身を足し合わせてしまいます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4212,9 +4224,12 @@ its contents, e.g.
   scala> Option(2) |+| Option(1)
   res: Option[Int] = Some(3)
 ~~~~~~~~
-
+<!--
 whereas we want "last rule wins". We can override the default
 `Monoid[Option[A]]` with our own:
+-->
+"後のテンプレートを優先する"というルールがありましたよね？
+このルールを適用するため、スコープ内に別の暗黙関数を用意して、デフォルトの`Monoid[Option[A]]`の振る舞いをオーバーライドします。
 
 {lang="text"}
 ~~~~~~~~
@@ -4249,9 +4264,13 @@ Now everything compiles, let's try it out...
                          Some(false))
 ~~~~~~~~
 
+<!--
 All we needed to do was implement one piece of business logic and
 `Monoid` took care of everything else for us!
+-->
+これで、要求を満たすコードを実装することができました。`Monoid`が必要なことを全部やってくれていますね！
 
+<!--
 Note that the list of `payments` are concatenated. This is because the
 default `Monoid[List]` uses concatenation of elements and happens to
 be the desired behaviour. If the business requirement was different,
@@ -4260,18 +4279,35 @@ it would be a simple case of providing a custom
 polymorphism we can have a different implementation of `append`
 depending on the `E` in `List[E]`, not just the base runtime class
 `List`.
+-->
+`payments`のリストが連結されることには注意してください。
+`Monoid[List]`のデフォルトの実装は、単純にリストを連結しますが、それでは要求を満たさない場合は
+カスタムの`Monoid[List[LocalDate]]`が必要です。
+第4章で述べたように、`append`はコンパイル時には実行時クラスの`List`だけではなく、`List[E]`の要素`E`の型に依存した実装を用意できます。
 
-A> When we introduced typeclasses in Chapter 4 we said that there can only be one
-A> implementation of a typeclass for a given type parameter, e.g. there is only one
-A> `Monoid[Option[Boolean]]` in the application. *Orphan instances* such as
-A> `lastWins` are the easiest way to break coherence.
-A> 
-A> We could try to justify locally breaking typeclass coherence by making
-A> `lastWins` private, but when we get to the `Plus` typeclass we will see a better
-A> way to implement our `Monoid`. When we get to tagged types, we will see an even
-A> better way: using `LastOption` instead of `Option` in our data model.
-A> 
+<!--
+When we introduced typeclasses in Chapter 4 we said that there can only be one
+implementation of a typeclass for a given type parameter, e.g. there is only one
+`Monoid[Option[Boolean]]` in the application. *Orphan instances* such as
+`lastWins` are the easiest way to break coherence.
+-->
+A> 第4章で型クラスを紹介したときには、型クラスには型パラメータで与えた型に基づいて実装を1つだけ与えることができると述べました。
+A> 例えば、`Monoid[Option[Boolean]]`の実装はアプリケーションの中で1つしかない、といった具合に。
+A> しかし、ここで実装した`lastWins`のように*孤立したインスタンス*を作ってしまうと、この一貫性がいとも簡単に崩れます。
+A>
+<!--
+We could try to justify locally breaking typeclass coherence by making
+`lastWins` private, but when we get to the `Plus` typeclass we will see a better
+way to implement our `Monoid`. When we get to tagged types, we will see an even
+better way: using `LastOption` instead of `Option` in our data model.
+-->
+A> `lastWins`をプライベートで宣言し、局所的にしか一貫性が崩れていないと言うことでこれを正当化することができるかもしれません。
+A> しかし、独自の`Monoid`インスタンスを別に用意するより、`Plus`という型クラスを使ったり、データモデルの中では`Option`ではなく`LastOption`という
+A> タグ付けされた型を使うといった手法の方法がよいでしょう。
+<!--
 A> Please don't break typeclass coherence at home, kids.
+-->
+A> 実際に型クラスを使う場合は、型クラスの一貫性を崩さないように注意してください。
 
 
 ## Objecty Things
