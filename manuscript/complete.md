@@ -4214,7 +4214,7 @@ later chapter, for now we will create an instance on the companion:
 However, this doesn't do what we want because `Monoid[Option[A]]` will append
 its contents, e.g.
 -->
-しかし、この実装は私達がここでやりたかったことととは少し違います。
+しかし、この実装は私達がここでやりたかったこととは少し違います。
 `Monoid[Option[A]]`は、以下のように、`Option`の中身を足し合わせてしまいます。
 
 {lang="text"}
@@ -4243,8 +4243,10 @@ whereas we want "last rule wins". We can override the default
     None
   )
 ~~~~~~~~
-
+<!--
 Now everything compiles, let's try it out...
+-->
+これでコンパイルできるはずです。試してみましょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -4325,8 +4327,12 @@ implemented.
 問題はJVMはJavaのために設計されていて、好むと好まざるとにかかわらず`java.lang.Object`に`equals`が定義されているということです。
 `equals`を実装から取り外したり、`equals`を必ず実装させる手段はありません。
 
+<!--
 However, in FP we prefer typeclasses for polymorphic functionality and even the
 concept of equality is captured at compiletime.
+-->
+しかしながら、関数型プログラミングでは多態性はなるべく型クラスで実現する方がよいでしょう。
+そうすることによって、等価性が成り立つかどうかもコンパイル時に捕捉できます。
 
 {width=20%}
 ![](images/scalaz-comparable.png)
@@ -4338,24 +4344,42 @@ concept of equality is captured at compiletime.
     @op("/==") def notEqual(a1: F, a2: F): Boolean = !equal(a1, a2)
   }
 ~~~~~~~~
-
+<!--
 Indeed `===` (*triple equals*) is more typesafe than `==` (*double
 equals*) because it can only be compiled when the types are the same
 on both sides of the comparison. This catches a lot of bugs.
+-->
 
+コンパイル時に比較しているオブジェクトの型が比較可能かどうかをチェックするので、`===`（*トリプルイコール*）は`==`（*ダブルイコール*）よりも型安全です。
+
+<!--
 `equal` has the same implementation requirements as `Object.equals`
+-->
+`equal`の実装は`Objet.equals`と同じ要求を満たす必要があります。
 
+<!--
 -   *commutative* `f1 === f2` implies `f2 === f1`
 -   *reflexive* `f === f`
 -   *transitive* `f1 === f2 && f2 === f3` implies `f1 === f3`
-
+-->
+-  *交換律* `f1 === f2`と`f2 === f1`は同じ値になります。
+-  *反射律* `f === f`は常に真です。
+-  *推移律* `f1 === f2 && f2 === f3`の計算結果は、`f1 === f3`の計算結果と同じになります。
+<!--
 By throwing away the universal concept of `Object.equals` we don't
 take equality for granted when we construct an ADT, stopping us at
 compiletime from expecting equality when there is none.
+-->
+`Object.equals`という普遍概念を捨て去ると抽象データ型を定義するときに必ずしも等価性について考慮する必要がなくなります。
+型クラスを使用すると、コンパイル時に必要な等価性の定義が無いことに気づけます。
 
+<!--
 Continuing the trend of replacing old Java concepts, rather than data
 *being a* `java.lang.Comparable`, they now *have an* `Order` according
 to:
+-->
+古いJavaの概念を捨て去る練習をもう少し続けてみましょう。
+今度は、比較という概念を`java.lang.Comparable`の継承ではなく`Order`という型クラスの実装で表現します。
 
 {lang="text"}
 ~~~~~~~~
@@ -4380,15 +4404,22 @@ to:
     case object GT extends Ordering
   }
 ~~~~~~~~
-
+<!--
 `Order` implements `.equal` in terms of the new primitive `.order`. When a
 typeclass implements a parent's *primitive combinator* with a *derived
 combinator*, an **implied law of substitution** for the typeclass is added. If an
 instance of `Order` were to override `.equal` for performance reasons, it must
 behave identically the same as the original.
+-->
+`Order`は新しい`.order`というプリミティブの観点から`equal`を実装します。
+ここでは、型クラスが親の*プリミティブコンビネータ*から*派生コンビネータ*を実装するとき、型クラスのための**暗黙の置換規則**が追加されています。
+`Order`が`equal`をパフォーマンス上の理由からオーバーライドする場合、元の振る舞いと同じになるようにしなければなりません。
 
+<!--
 Things that have an order may also be discrete, allowing us to walk
 successors and predecessors:
+-->
+順序があるものは離散的かもしれません。そのような場合、次のもの、前のもの、という概念を使って値を列挙します。
 
 {lang="text"}
 ~~~~~~~~
@@ -4416,18 +4447,29 @@ successors and predecessors:
   scala> 'm' |-> 'u'
   res: List[Char] = List(m, n, o, p, q, r, s, t, u)
 ~~~~~~~~
-
+<!--
 A> `|-->` is Scalaz's Lightsaber. This is the syntax of a Functional
 A> Programmer. Not as clumsy or random as `fromStepToL`. An elegant
 A> syntax... for a more civilised age.
+-->
+A> `|-->`はScalazのライトセーバーです。こういうものが関数型プログラマーが使う構文です。
+A> `fromSteoToL`なんて不格好でしょう。記号を使う方が文明化された時代にふさわしいエレガントな構文ですよね？
 
+<!--
 We will discuss `EphemeralStream` in the next chapter, for now we just need to
 know that it is a potentially infinite data structure that avoids the memory
 retention problems in the stdlib `Stream`.
+-->
+次の章で`EphemeralStream`の話をしますが、ひとまず、このデータ構造が標準ライブラリの`Stream`が持つメモリ保持問題を回避した上で
+潜在的に無限のデータを扱えるデータ構造であるということを覚えておいてください。
 
+<!--
 Similarly to `Object.equals`, the concept of `.toString` on every `class` does
 not make sense in Java. We would like to enforce stringyness at compiletime and
 this is exactly what `Show` achieves:
+-->
+`Object.equals`と同様に、Javaにおいて全てのクラスが`.toString`を持つというのも全く意味のない概念です。
+`Show`という型クラスは、コンパイル時に必要な文字列表現が実装されていることを強制してくれます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4437,9 +4479,12 @@ this is exactly what `Show` achieves:
   }
 ~~~~~~~~
 
+<!--
 We will explore `Cord` in more detail in the chapter on data types, we need only
 know that it is an efficient data structure for storing and manipulating
 `String`.
+-->
+データ構造に関する章で`Cord`という構造を紹介しますが、このデータ構造が`String`の保存と操作に効率的であるということを覚えておいてください。
 
 
 ## Mappable Things
