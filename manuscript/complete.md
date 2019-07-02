@@ -4486,17 +4486,23 @@ know that it is an efficient data structure for storing and manipulating
 -->
 データ構造に関する章で`Cord`という構造を紹介しますが、このデータ構造が`String`の保存と操作に効率的であるということを覚えておいてください。
 
-
+<!--
 ## Mappable Things
-
+-->
+## 写像性
+<!--
 We're focusing on things that can be mapped over, or traversed, in
 some sense:
+-->
+写像を得る、とか走査するということについて考えてみましょう。
 
 {width=100%}
 ![](images/scalaz-mappable.png)
 
-
+<!--
 ### Functor
+-->
+### ファンクタ
 
 {lang="text"}
 ~~~~~~~~
@@ -4514,18 +4520,23 @@ some sense:
     def mapply[A, B](a: A)(f: F[A => B]): F[B] = map(f)((ff: A => B) => ff(a))
   }
 ~~~~~~~~
-
+<!--
 The only abstract method is `map`, and it must *compose*, i.e. mapping
 with `f` and then again with `g` is the same as mapping once with the
 composition of `f` and `g`:
+-->
+ファンクタが持つ抽象メソッドは`map`のみです。`map`は*合成*できなければいけません。
+つまり、関数`f`で写像を作った後に関数`g`で再び写像を得ることと`f`と`g`の合成関数で写像を得ることは同じです。
 
 {lang="text"}
 ~~~~~~~~
   fa.map(f).map(g) == fa.map(f.andThen(g))
 ~~~~~~~~
-
+<!--
 The `map` should also perform a no-op if the provided function is
 `identity` (i.e. `x => x`)
+-->
+また、`map`に写像を得るための関数として`identity`を与えた場合は、何も操作してはいけません。
 
 {lang="text"}
 ~~~~~~~~
@@ -4533,12 +4544,17 @@ The `map` should also perform a no-op if the provided function is
   
   fa.map(x => x) == fa
 ~~~~~~~~
-
+<!--
 `Functor` defines some convenience methods around `map` that can be optimised by
 specific instances. The documentation has been intentionally omitted in the
 above definitions to encourage guessing what a method does before looking at the
 implementation. Please spend a moment studying only the type signature of the
 following before reading further:
+-->
+`Functor`には`map`を元にした便利なメソッドがいくつか定義されています。その中には特定のインスタンスに対して最適化されたものもあります。
+実装を見る前にシグネチャや名前からメソッドが何をしているのかを推測することを促すために、
+これらのメソッドのいくつかは意図的にドキュメントが書かれていません。
+この章を読み進めて行く前にこれらのメソッドの型シグネチャをじっくり読む時間を作ってみてください。
 
 {lang="text"}
 ~~~~~~~~
@@ -4553,7 +4569,7 @@ following before reading further:
   def lift[A, B](f: A => B): F[A] => F[B]
   def mapply[A, B](a: A)(f: F[A => B]): F[B]
 ~~~~~~~~
-
+<!--
 1.  `void` takes an instance of the `F[A]` and always returns an
     `F[Unit]`, it forgets all the values whilst preserving the
     structure.
@@ -4572,12 +4588,30 @@ following before reading further:
        => B` and a value `A`, then we can get an `F[B]`. It has a similar
     signature to `pure` but requires the caller to provide the `F[A =>
        B]`.
+-->
+1.  `void`は`F[A]`のインスタンスを受け取り、常に`F[Unit]`を返します。つまり、構造を維持しつつすべての値を破棄します。
+2.  `fproduct`は`map`と同じ入力を受け付けますが、`F[(A, B)]`を返します。結果の要素は元の要素と関数を適用した結果のペアです。
+    このメソッドは入力要素を引き続き保持したい場合に使用します。
+3.  `fpair`は全ての要素をそのままタプルにして`F[(A, A)]`を返します。
+4.  `strengthL`は`F[B]`の各要素に左側のペアとして定数`A`を与えます。
+5.  `strengthR`は`F[A]`の右側のペアとして定数`B`を与えます。
+6.  `lift`は関数`A => B`を受け取って`F[A] => F[B]`を返します。
+    言い換えるとこの関数は`F[A]`に作用する関数を受け取って`F[A]`を直接操作する関数を返します。
+7.  `mapply`はややこしい関数です。関数`A => B`を要素として持つ`F[_]`と値`A`から`F[B]`を得ることができます。
+    `pure`のシグネチャと似ていますが、呼び出し元は`F[A => B]`を与える必要があります。
 
+<!--
 `fpair`, `strengthL` and `strengthR` look pretty useless, but they are
 useful when we wish to retain some information that would otherwise be
 lost to scope.
+-->
+`fpair`、`strengthL`、`strengthR`といった関数は一見役に立たないように思えるかもしれません。
+しかし、スコープの中に与えられた情報を保持したい場合は便利なことがあります。
 
+<!--
 `Functor` has some special syntax:
+-->
+`Functor`にはいくつか特別な構文があります。
 
 {lang="text"}
 ~~~~~~~~
@@ -4586,27 +4620,41 @@ lost to scope.
     def >|[B](b: =>B): F[B] = as(b)
   }
 ~~~~~~~~
-
+<!--
 `.as` and `>|` are a way of replacing the output with a constant.
+-->
+`as`と`>|`は出力を定数で置き換えます。
 
+<!--
 A> When Scalaz provides additional functionality as syntax, rather than on the
 A> typeclass itself, it is because of binary compatibility.
 A> 
 A> When a `X.Y.0` version of Scalaz is released, it is not possible to add methods
 A> to typeclasses in that release series for Scala 2.10 and 2.11. It is therefore
 A> worth reading both the typeclass source and its syntax.
+-->
+A> Scalazで追加機能を構文で提供するのは、型クラスだからというよりはバイナリ互換性のためです。
+A>
+A> Scalazの`X.Y.0`というバージョンをリリースする時、Scala2.10やScala2.11のために作られた型クラスにメソッドを追加することは不可能です。
+A> このため、型クラスと構文の両方のソースコードを読んでおくことをお勧めします。
 
+<!--
 In our example application, as a nasty hack (which we didn't even
 admit to until now), we defined `start` and `stop` to return their
 input:
+-->
+サンプルアプリケーションでは、ちょっとしたズルとして（今までズルであることは隠していましたが）、
+`start`と`end`は与えられた入力を返すようになっています。
 
 {lang="text"}
 ~~~~~~~~
   def start(node: MachineNode): F[MachineNode]
   def stop (node: MachineNode): F[MachineNode]
 ~~~~~~~~
-
+<!--
 This allowed us to write terse business logic such as
+-->
+このようにすると以下のように簡潔なビジネスロジックを書くことができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4616,7 +4664,10 @@ This allowed us to write terse business logic such as
   } yield update
 ~~~~~~~~
 
+<!--
 and
+-->
+複数のノードを停止するプログラムは以下のようになります。
 
 {lang="text"}
 ~~~~~~~~
@@ -4626,16 +4677,22 @@ and
     update  = world.copy(pending = world.pending ++ updates)
   } yield update
 ~~~~~~~~
-
+<!--
 But this hack pushes unnecessary complexity into the implementations. It is
 better if we let our algebras return `F[Unit]` and use `as`:
+-->
+しかし、こうしたズルは実装において不必要な複雑さをもたらします。
+`as`を使って`F[Unit]`を返すような代数を用いるほうが好ましいでしょう。
 
 {lang="text"}
 ~~~~~~~~
   m.start(node) as world.copy(pending = Map(node -> world.time))
 ~~~~~~~~
 
+<!--
 and
+-->
+この場合、ノードを停止するプログラムは以下のようになるでしょう。
 
 {lang="text"}
 ~~~~~~~~
