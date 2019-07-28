@@ -4703,15 +4703,21 @@ and
   } yield update
 ~~~~~~~~
 
-
+<!--
 ### Foldable
-
+-->
+### 畳み込み（Foldable）
+<!--
 Technically, `Foldable` is for data structures that can be walked to produce a
 summary value. However, this undersells the fact that it is a one-typeclass army
 that can provide most of what we would expect to see in a Collections API.
-
+-->
+技術的には、`Foldable`は順次計算をして要約値を生成するためのデータ構造です。しかし、`Foldable`が持つ性質には、多くのコレクションAPIでも利用できる性質がという事実を見逃してはいけません。
+<!--
 There are so many methods we are going to have to split them out,
 beginning with the abstract methods:
+-->
+それらをメソッドとして切り出していくために、まず基本的な抽象メソッドから始めていきます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4720,38 +4726,54 @@ beginning with the abstract methods:
     def foldRight[A, B](fa: F[A], z: =>B)(f: (A, =>B) => B): B
     def foldLeft[A, B](fa: F[A], z: B)(f: (B, A) => B): B = ...
 ~~~~~~~~
-
+<!--
 An instance of `Foldable` need only implement `foldMap` and
 `foldRight` to get all of the functionality in this typeclass,
 although methods are typically optimised for specific data structures.
+-->
 
+データ構造によっては最適化するための実装を行うこともありますが、`Foldable`は`foldMap`と`foldRight`をさえ実装すれば、この型クラスの全ての機能を得ることができます。
+
+<!--
 `.foldMap` has a marketing buzzword name: **MapReduce**. Given an `F[A]`, a
 function from `A` to `B`, and a way to combine `B` (provided by the `Monoid`,
 along with a zero `B`), we can produce a summary value of type `B`. There is no
 enforced operation order, allowing for parallel computation.
+-->
 
+`.foldMap`はマーケティング用の別名は**MapReduce**です。`foldMap`は`F[A]`と`A`を`B`に変換する関数を受け取り、その結果を足し合わせます。（`B`の足し合わせはゼロから`Monoid`を利用して行います。）足し合わせの順序は関係がないので、この計算は並列化できます。
+
+<!--
 `foldRight` does not require its parameters to have a `Monoid`,
 meaning that it needs a starting value `z` and a way to combine each
 element of the data structure with the summary value. The order for
 traversing the elements is from right to left and therefore it cannot
 be parallelised.
+-->
+`foldRight`は呼び出し元に`Monoid`を要求しません。その代わり、始めの`B`型の値`z`と`B`型の各要素を結合する方法を直接受け取ります。要素を走査する順序は右から左へと決まっているので、この計算は並列化できません。
 
+<!--
 A> `foldRight` is conceptually the same as the `foldRight` in the Scala
 A> stdlib. However, there is a problem with the stdlib `foldRight`
 A> signature, solved in Scalaz: very large data structures can stack
 A> overflow. `List.foldRight` cheats by implementing `foldRight` as a
 A> reversed `foldLeft`
 A> 
+-->
+A> `foldRight`は概念的には標準ライブラリの`foldRight`と同じです。しかし、標準ライブラリの`foldRight`のシグネチャには、非常に大きなデータ構造の場合にスタックが溢れてしまうという問題があり、Scalazではこれを解決しています。標準ライブラリでは、`List.foldRight`はリバースしてから`foldLeft`するという実装を行っています。
 A> {lang="text"}
 A> ~~~~~~~~
 A>   override def foldRight[B](z: B)(op: (A, B) => B): B =
 A>     reverse.foldLeft(z)((right, left) => op(left, right))
 A> ~~~~~~~~
 A> 
+<!-->
 A> but the concept of reversing is not universal and this workaround cannot be used
 A> for all data structures. Say we want to find a small number in a `Stream`, with
 A> an early exit:
-A> 
+-->
+A> しかし、リバースするという概念を持つことができるということは、必ずしも一般的ではないので、この実装を全てのデータ構造に適用することはできません。以下のように、`Stream`の`foldRight`の途中で、少ない要素で早期リターンするようなコードを書いたとしてもスタックが溢れてしまいます。
+A>
 A> {lang="text"}
 A> ~~~~~~~~
 A>   scala> def isSmall(i: Int): Boolean = i < 10
@@ -4763,8 +4785,11 @@ A>     at scala.collection.Iterator.toStream(Iterator.scala:1403)
 A>     ...
 A> ~~~~~~~~
 A> 
+<!--
 A> Scalaz solves the problem by taking a *byname* parameter for the
 A> aggregate value
+-->
+A> Scalazではこの問題は集計値を*名前渡し*のパラメータにすることで解決しています。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -4772,11 +4797,17 @@ A>   scala> (1 |=> 100000).foldRight(false)(el => acc => isSmall(el) || acc )
 A>   res: Boolean = true
 A> ~~~~~~~~
 A> 
+<!--
 A> which means that the `acc` is not evaluated unless it is needed.
+-->
+A> 名前渡しにすると、`acc`は必要になるまで計算されません。
 A> 
+<!--
 A> It is worth baring in mind that not all operations are stack safe in
 A> `foldRight`. If we were to require evaluation of all elements, we can
 A> also get a `StackOverflowError` with Scalaz's `EphemeralStream`
+-->
+A> `foldRight`の全ての操作がスタックセーフであるとは限らないことには注意する必要があります。Scalazの`EphemeralStream`を使ったとしても、全ての要素を評価する必要がある場合は`StackOverflowError`が起きる可能性があります。
 A> 
 A> {lang="text"}
 A> ~~~~~~~~
@@ -4786,22 +4817,31 @@ A>     at scalaz.Foldable.$anonfun$foldr$1(Foldable.scala:100)
 A>     ...
 A> ~~~~~~~~
 
+<!--
 `foldLeft` traverses elements from left to right. `foldLeft` can be
 implemented in terms of `foldMap`, but most instances choose to
 implement it because it is such a basic operation. Since it is usually
 implemented with tail recursion, there are no *byname* parameters.
+-->
+`foldLeft`は要素を左から右に走査します。`foldLeft`は`foldMap`を使って実装することはできますが、基本的な操作の1つなので、殆どのインスタンスは独自の実装を行っています。通常は*名前渡し*をすることなく、末尾再帰を使って実装します。
 
+<!--
 The only law for `Foldable` is that `foldLeft` and `foldRight` should
 each be consistent with `foldMap` for monoidal operations. e.g.
 appending an element to a list for `foldLeft` and prepending an
 element to a list for `foldRight`. However, `foldLeft` and `foldRight`
 do not need to be consistent with each other: in fact they often
 produce the reverse of each other.
+-->
+`Foldable`に必要な唯一の法則は、`foldLeft`と`foldRight`がそれぞれモノイドの操作について一貫性を持つことです。例えば、あるリストに要素を追加したとき、`foldLeft`の演算結果と`foldRight`の演算結果には一貫性があります。しかし、この結果は必ずしも等しいというわけではありません。むしろ、しばしばお互いに逆の動きをします。
 
+<!--
 The simplest thing to do with `foldMap` is to use the `identity`
 function, giving `fold` (the natural sum of the monoidal elements),
 with left/right variants to allow choosing based on performance
 criteria:
+-->
+`foldMap`を使った最も簡単な操作は、`identity`関数を使ったものです。`fold`（モノイドを使った自然和）にはパフォーマンスの要件に応じた左右の別実装があります。
 
 {lang="text"}
 ~~~~~~~~
@@ -4809,15 +4849,19 @@ criteria:
   def sumr[A: Monoid](fa: F[A]): A = ...
   def suml[A: Monoid](fa: F[A]): A = ...
 ~~~~~~~~
-
+<!--
 Recall that when we learnt about `Monoid`, we wrote this:
+-->
+`Monoid`を学んだとき、次のようなコードが出てきました。
 
 {lang="text"}
 ~~~~~~~~
   scala> templates.foldLeft(Monoid[TradeTemplate].zero)(_ |+| _)
 ~~~~~~~~
-
+<!--
 We now know this is silly and we should have written:
+-->
+もうこのように書く必要はないので、次のように書き直しましょう。
 
 {lang="text"}
 ~~~~~~~~
@@ -4827,28 +4871,37 @@ We now know this is silly and we should have written:
                          Some(USD),
                          Some(false))
 ~~~~~~~~
-
+<!--
 `.fold` doesn't work on stdlib `List` because it already has a method
 called `fold` that does it is own thing in its own special way.
+-->
+標準ライブラリの`List`には`fold`という名前で別の意味を持つメソッドが既にあるため、このようには動作しません。
 
+<!--
 The strangely named `intercalate` inserts a specific `A` between each
 element before performing the `fold`
+-->
+`intercalate`という妙な名前のメソッドは`fold`を行うときに、それぞれの要素に指定した`A`を差し込みます。
 
 {lang="text"}
 ~~~~~~~~
   def intercalate[A: Monoid](fa: F[A], a: A): A = ...
 ~~~~~~~~
-
+<!--
 which is a generalised version of the stdlib's `mkString`:
+-->
+これは標準ライブラリの`mkString`を一般化したものです。
 
 {lang="text"}
 ~~~~~~~~
   scala> List("foo", "bar").intercalate(",")
   res: String = "foo,bar"
 ~~~~~~~~
-
+<!--
 The `foldLeft` provides the means to obtain any element by traversal
 index, including a bunch of other related methods:
+-->
+`foldLeft`は要素を走査することで、各要素の位置を知ることができます。これを応用することで、様々なメソッドが実装されています。
 
 {lang="text"}
 ~~~~~~~~
@@ -4859,26 +4912,36 @@ index, including a bunch of other related methods:
   def empty[A](fa: F[A]): Boolean = ...
   def element[A: Equal](fa: F[A], a: A): Boolean = ...
 ~~~~~~~~
-
+<!--
 Scalaz is a pure library of only *total functions*. Whereas `List(0)` can throw
 an exception, `Foldable.index` returns an `Option[A]` with the convenient
 `.indexOr` returning an `A` when a default value is provided. `.element` is
 similar to the stdlib `.contains` but uses `Equal` rather than ill-defined JVM
 equality.
+-->
+Scalazは*全域関数*のみを使った純粋なライブラリです。`List(0)`は例外を送出する可能性がありますが、Scalazでは`Foldable.index`を使って`Option[A]`を返したり、`indexOr`にデフォルト値を与えて`A`の値を得たりできます。`.elements`は標準ライブラリの`contains`と似ていますが、JVMの誤った等価性の実装ではなく、`Equal`を使用します。
 
+<!--
 These methods *really* sound like a collections API. And, of course,
 anything with a `Foldable` can be converted into a `List`
+-->
+これらのメソッドは*本当に*コレクションAPIのものとそっくりです。そして、当然ですが、全ての`Foldable`は`List`に変換できます。
 
 {lang="text"}
 ~~~~~~~~
   def toList[A](fa: F[A]): List[A] = ...
 ~~~~~~~~
-
+<!--
 There are also conversions to other stdlib and Scalaz data types such
 as `.toSet`, `.toVector`, `.toStream`, `.to[T <: TraversableLike]`,
 `.toIList` and so on.
+-->
+この他にも、`.toSet`、`.toVector`、`.toStream`、`.to[T <: TraversableLike]`、`.toIList`といった、標準ライブラリのデータ型とScalazのデータ型を変換するメソッドが色々用意されています。
 
+<!--
 There are useful predicate checks
+-->
+また、述語を使った便利なメソッドもあります。
 
 {lang="text"}
 ~~~~~~~~
@@ -4886,20 +4949,30 @@ There are useful predicate checks
   def all[A](fa: F[A])(p: A => Boolean): Boolean = ...
   def any[A](fa: F[A])(p: A => Boolean): Boolean = ...
 ~~~~~~~~
-
+<!--
 `filterLength` is a way of counting how many elements are `true` for a
 predicate, `all` and `any` return `true` if all (or any) element meets
 the predicate, and may exit early.
+-->
+`filterLength`は述語が`true`を返す要素の数を数えます。`all`や`any`は全ての要素（もしくは要素のいずれか）が`true`を返す場合に`true`を返し、早期終了することがあります。
 
+<!--
 A> We've seen the `NonEmptyList` in previous chapters. For the sake of
 A> brevity we use a type alias `Nel` in place of `NonEmptyList`.
 A> 
 A> We've also seen `IList` in previous chapters, recall that it is an
 A> alternative to stdlib `List` with impure methods, like `apply`,
 A> removed.
+-->
+A> 前の章で`NonEmptyList`というデータ型が出てきましたが、簡単のため、これの`Nel`というエイリアスを使うことにします。
+A>
+A> `IList`も既に出てきましたが、これは標準ライブラリの`List`から純粋ではない実装（例えば`apply`）を取り除いたものです。
 
+<!--
 We can split an `F[A]` into parts that result in the same `B` with
 `splitBy`
+-->
+`F[A]`は`B`型の結果を得る関数を使って、同じ結果ごとにまとめることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4911,31 +4984,47 @@ We can split an `F[A]` into parts that result in the same `B` with
   def findLeft[A](fa: F[A])(f: A => Boolean): Option[A] = ...
   def findRight[A](fa: F[A])(f: A => Boolean): Option[A] = ...
 ~~~~~~~~
-
+<!--
 for example
+-->
+例えば、次のようなことができます。
 
 {lang="text"}
 ~~~~~~~~
   scala> IList("foo", "bar", "bar", "faz", "gaz", "baz").splitBy(_.charAt(0))
   res = [(f, [foo]), (b, [bar, bar]), (f, [faz]), (g, [gaz]), (b, [baz])]
 ~~~~~~~~
-
+<!--
 noting that there are two values indexed by `'b'`.
+-->
+`b`によってインデックスされた値が2つあることに注意してください。
 
+<!--
 `splitByRelation` avoids the need for an `Equal` but we must provide
 the comparison operator.
+-->
+`splitByRelation`には`Equal`を使わずに比較のための関数を与えます。
 
+<!--
 `splitWith` splits the elements into groups that alternatively satisfy
 and don't satisfy the predicate. `selectSplit` selects groups of
 elements that satisfy the predicate, discarding others. This is one of
 those rare occasions when two methods share the same type signature
 but have different meanings.
+-->
+`splitWith`は要素を述語を満たすグループと満たさないグループに分割します。`selectSplit`は述語を満たす要素を選択し、その他の要素を破棄します。この2つのメソッドは、それぞれが同じ型のシグネチャを持ちながら意味が異なる稀な例です。
 
+<!--
 `findLeft` and `findRight` are for extracting the first element (from
 the left, or right, respectively) that matches a predicate.
+-->
+`findLeft`と`findRight`は述語を満たす最初の要素（何が最初かは左右のどちらかによります）を見つけます。
 
+<!--
 Making further use of `Equal` and `Order`, we have the `distinct`
 methods which return groupings.
+-->
+`distinct`は`Equal`と`Order`を上手く利用して要素をまとめた結果を返します。
 
 {lang="text"}
 ~~~~~~~~
@@ -4943,20 +5032,28 @@ methods which return groupings.
   def distinctE[A: Equal](fa: F[A]): IList[A] = ...
   def distinctBy[A, B: Equal](fa: F[A])(f: A => B): IList[A] =
 ~~~~~~~~
-
+<!--
 `distinct` is implemented more efficiently than `distinctE` because it
 can make use of ordering and therefore use a quicksort-esque algorithm
 that is much faster than the stdlib's naive `List.distinct`. Data
 structures (such as sets) can implement `distinct` in their `Foldable`
 without doing any work.
+-->
+順序を利用することでクイックソート風のアルゴリズムを使用することができるので、`distinct`は標準ライブラリの`List.distinct`よりも遥かに高速で、`distinctE`よりも効率的な実装です。（セットのような）データ構造はそれぞれの`Foldable`のインスタンスを使うことで何もしなくても`distinct`の実装を利用できます。
 
+<!--
 `distinctBy` allows grouping by the result of applying a function to
 the elements. For example, grouping names by their first letter.
+-->
+`distinctBy`を使うと、関数を適用した結果によって要素をまとめられます。例えば、名前を最初の文字でまとめたりできます。
 
+<!--
 We can make further use of `Order` by extracting the minimum or
 maximum element (or both extrema) including variations using the `Of`
 or `By` pattern to first map to another type or to use a different
 type to do the order comparison.
+-->
+`Order`を上手く利用すると、最小値や最大値の要素（もしくは両方の極値）を抽出できます。さらに`Of`や`By`といった語を付け足して、別の型への計算結果を利用してその時の`A`の値や`B`の値を得ることができます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4972,9 +5069,11 @@ type to do the order comparison.
   def extremaOf[A, B: Order](fa: F[A])(f: A => B): Option[(B, B)] = ...
   def extremaBy[A, B: Order](fa: F[A])(f: A => B): Option[(A, A)] =
 ~~~~~~~~
-
+<!--
 For example we can ask which `String` is maximum `By` length, or what
 is the maximum length `Of` the elements.
+-->
+例えば、文字列を持つリストに対して、`By`を使って最大の長さを持つ文字列を問い合わせたり、`Of`を使って最大の長さを持つ文字列の長さを問い合わせたりできます。
 
 {lang="text"}
 ~~~~~~~~
@@ -4985,12 +5084,18 @@ is the maximum length `Of` the elements.
   res: Option[Int] = Some(4)
 ~~~~~~~~
 
+<!--
 This concludes the key features of `Foldable`. The takeaway is that anything
 we'd expect to find in a collection library is probably on `Foldable` and if it
 isn't already, it probably should be.
+-->
+これで`Foldable`の重要な機能の紹介は終わりです。コレクションライブラリに存在すべき機能は概ね`Foldable`にも存在します。もし無かったとしても、本当は`Foldable`にもあるべきものです。
 
+<!--
 We will conclude with some variations of the methods we've already seen.
 First there are methods that take a `Semigroup` instead of a `Monoid`:
+-->
+最後に、これまで見てきたメソッドの幾つかのバリエーションを紹介します。まず紹介するのは、`Monoid`ではなく`Semigroup`を使うメソッドです。
 
 {lang="text"}
 ~~~~~~~~
@@ -5000,20 +5105,31 @@ First there are methods that take a `Semigroup` instead of a `Monoid`:
   def suml1Opt[A: Semigroup](fa: F[A]): Option[A] = ...
   ...
 ~~~~~~~~
-
+<!--
 returning `Option` to account for empty data structures (recall that
 `Semigroup` does not have a `zero`).
+-->
+空のデータ構造を表現するために`Option`を返します。（`Semigroup`には`zero`が無いことを思い出してください。）
 
+<!--
 A> The methods read "one-Option", not `10 pt` as in typesetting.
+-->
+A> このメソッドのは`10 pt`ではなく"one-Option"と読みます。
 
+<!--
 The typeclass `Foldable1` contains a lot more `Semigroup` variants of
 the `Monoid` methods shown here (all suffixed `1`) and makes sense for
 data structures which are never empty, without requiring a `Monoid` on
 the elements.
+-->
+`Foldable1`という型クラスにはここで紹介した`Monoid`を使ったメソッドの`Semigroup`版が沢山用意されています。これらのメソッドは、要素に`Monoid`を必要とせず、空になることが無いデータ構造に対して有効です。
 
+<!--
 Importantly, there are variants that take monadic return values. We already used
 `foldLeftM` when we first wrote the business logic of our application, now we
 know that it is from `Foldable`:
+-->
+モナディックな値を返すバージョンも重要です。始めにアプリケーションのビジネスロジックを書くときに`foldLeftM`というメソッドを使いましたが、`Foldable`について学んだので、もう意味がわかると思います。
 
 {lang="text"}
 ~~~~~~~~
