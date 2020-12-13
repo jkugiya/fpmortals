@@ -5142,10 +5142,14 @@ know that it is from `Foldable`:
   ...
 ~~~~~~~~
 
-
+<!--
 ### Traverse
-
+-->
+### 走査（Traverse）
+<!--
 `Traverse` is what happens when we cross a `Functor` with a `Foldable`
+-->
+`Traverse`は`Functor`と`Foldable`を組み合わせたときに可能な操作です。
 
 {lang="text"}
 ~~~~~~~~
@@ -5165,31 +5169,49 @@ know that it is from `Foldable`:
     def mapAccumR[S, A, B](fa: F[A], z: S)(f: (S, A) => (S, B)): (S, F[B]) = ...
   }
 ~~~~~~~~
-
+<!--
 At the beginning of the chapter we showed the importance of `traverse`
 and `sequence` for swapping around type constructors to fit a
 requirement (e.g. `List[Future[_]]` to `Future[List[_]]`).
+-->
+この章の初めに、型コンストラクタを要件に合うように入れ替える（例えば、`List[Future[_]]`を`Future[List[_]]`にする）ために`traverse`と`sequence`が重要だと述べました。
 
+<!--
 In `Foldable` we weren't able to assume that `reverse` was a universal
 concept, but now we can reverse a thing.
+-->
+`Foldable`では`reverse`という操作は普遍的概念ではありませんでしたが、`Traverse`においては普遍的です。
 
+<!--
 We can also `zip` together two things that have a `Traverse`, getting
 back `None` when one side runs out of elements, using `zipL` or `zipR`
 to decide which side to truncate when the lengths don't match. A
 special case of `zip` is to add an index to every entry with
 `indexed`.
+-->
+`zip`を使うと`Traverse`な2つのものをまとめられます。`zipL`や`zipR`を使うと、左右のメソッドに対応した要素が存在する間は不足する方に`None`を使って`zip`を続けるといったことができます。全ての要素にインデックスをつけるという`zip`の特化した実装として`indexed`も用意されています。
 
+<!--
 `zipWithL` and `zipWithR` allow combining the two sides of a `zip`
 into a new type, and then returning just an `F[C]`.
+-->
+`zipWithL`と`zipWithR`は`zip`の両側から`C`型の新しい値を得ることで最終的に`F[C]`を得ます。
 
+<!--
 `mapAccumL` and `mapAccumR` are regular `map` combined with an accumulator. If
 we find our old Java ways make us want to reach for a `var`, and refer to it
 from a `map`, we should be using `mapAccumL`.
+-->
+`mapAccumL`と`mapAccumR`は`map`と通常のアキュムレータを組み合わせたものです。
+`map`をしながら`var`を使った古いJavaのやり方をしたくなってしまう時は、`mapAccumL`を試してみるべきです。
 
+<!--
 For example, let's say we have a list of words and we want to blank
 out words we've already seen. The filtering algorithm is not allowed
 to process the list of words a second time so it can be scaled to an
 infinite stream:
+-->
+例えば、単語のリストから既に出てきた言葉を除外する、というケースを考えてみましょう。
 
 {lang="text"}
 ~~~~~~~~
